@@ -5,7 +5,7 @@ from django.db import models
 class Word(models.Model):
     """Model representing a word and its relationships to other words."""
     name = models.CharField(max_length=100)
-    parts_of_speech = models.ManyToManyField('PartOfSpeech', blank=False)  # todo blank false or true?
+    parts_of_speech = models.ManyToManyField('PartOfSpeech', blank=True)
 
     # number of occurrences per million words of english text
     frequency = models.DecimalField(max_digits=12, decimal_places=6)
@@ -89,14 +89,14 @@ class PartOfSpeech(models.Model):
         ('v', 'verb'),
         ('adj', 'adjective'),
         ('adv', 'adverb'),
-        ('u', 'unknown'),
+        # ('u', 'unknown'),  blank value will indicate unknown instead of 'u'
     )
 
     name = models.CharField(
+        primary_key=True,
+        unique=True,
         max_length=3,
         choices=part_choices,
-        blank=False,
-        default='u',
         help_text='Part of speech',
     )
 

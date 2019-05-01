@@ -8,10 +8,10 @@ class Word(models.Model):
     parts_of_speech = models.ManyToManyField('PartOfSpeech', blank=True)
 
     # number of occurrences per million words of english text
-    frequency = models.DecimalField(max_digits=12, decimal_places=6)
+    frequency = models.DecimalField(max_digits=12, decimal_places=6, null=True, blank=True)
 
     # JSON returned from DataMuse containing one or more strings defining the word
-    definitions = JSONField(blank=True)
+    definitions = JSONField(null=True, blank=True)
 
     # Remaining fields hold words related to this word.
     # Field names derived from three-letter codes used by rel_[code] DataMuse parameter

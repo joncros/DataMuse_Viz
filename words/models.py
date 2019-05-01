@@ -15,37 +15,51 @@ class Word(models.Model):
 
     # Remaining fields hold words related to this word.
     # Field names derived from three-letter codes used by rel_[code] DataMuse parameter
-    jja = models.ManyToManyField("self", verbose_name="popular related noun", symmetrical=False)
-    jjb = models.ManyToManyField("self", verbose_name="popular related adjective", symmetrical=False)
-    syn = models.ManyToManyField("self", verbose_name="synonym")
+    jja = models.ManyToManyField('self', verbose_name='popular related noun', symmetrical=False,
+                                 related_name='related_by_jja')
+    jjb = models.ManyToManyField('self', verbose_name='popular related adjective', symmetrical=False,
+                                 related_name='related_by_jjb')
+    syn = models.ManyToManyField('self', verbose_name='synonym', related_name='synonyms',
+                                 related_query_name='synonym')
 
     # Words that are statistically associated with this word in the same piece of text
-    trg = models.ManyToManyField("self", verbose_name="triggers", symmetrical=False)
+    trg = models.ManyToManyField('self', verbose_name='triggers', symmetrical=False,
+                                 related_name='words_is_trigger_for', related_query_name='is_trigger_for')
 
-    ant = models.ManyToManyField("self", verbose_name="antonyms")
-    spc = models.ManyToManyField("self", verbose_name="direct hypernyms", symmetrical=False,
-                                 help_text="words with a similar, but broader meaning "
-                                           "(i.e. boat is a hypernym of gondola)")
-    gen = models.ManyToManyField("self", verbose_name="direct hyponyms", symmetrical=False,
-                                 help_text="words with a similar, but more specific meaning "
-                                           "(i.e. gondola is a hyponym of boat)")
-    com = models.ManyToManyField("self", verbose_name="comprises", symmetrical=False,
-                                 help_text="things which this is composed of"
-                                 "(a car has an accelerator, a steering wheel, etc.")
-    par = models.ManyToManyField("self", verbose_name="part of", symmetrical=False,
-                                 help_text="things of which this is a part of"
-                                 "(a window is a part of a car, a house, a boat, etc.)")
-    bga = models.ManyToManyField("self", verbose_name="frequent followers", symmetrical=False,
-                                 help_text="words that frequently follow this "
-                                           "(i.e. wreak followed by havoc")
-    bgb = models.ManyToManyField("self", verbose_name="frequent predecessors", symmetrical=False,
-                                 help_text="words that frequently precede this"
-                                           "(i.e. havoc preceding wreak")
-    rhy = models.ManyToManyField("self", verbose_name="rhymes", help_text="perfect rhymes")
-    nry = models.ManyToManyField("self", verbose_name="near rhymes", help_text="approximate rhymes")
-    hom = models.ManyToManyField("self", verbose_name="homophones", help_text="sound-alike words")
-    cns = models.ManyToManyField("self", verbose_name="consonant match",
-                                 help_text="i.e. sample and simple")
+    ant = models.ManyToManyField('self', verbose_name='antonyms', related_name='antonyms',
+                                 related_query_name='antonym')
+    spc = models.ManyToManyField('self', verbose_name='direct hypernyms', symmetrical=False,
+                                 help_text='words with a similar, but broader meaning '
+                                           '(i.e. boat is a hypernym of gondola)',
+                                 related_name='hyponyms', related_query_name='hyponym')
+    gen = models.ManyToManyField('self', verbose_name='direct hyponyms', symmetrical=False,
+                                 help_text='words with a similar, but more specific meaning '
+                                           '(i.e. gondola is a hyponym of boat)',
+                                 related_name='hypernyms', related_query_name='hypernym')
+    com = models.ManyToManyField('self', verbose_name='comprises', symmetrical=False,
+                                 help_text='things which this is composed of'
+                                           '(a car has an accelerator, a steering wheel, etc.',
+                                 related_name='part_of')
+    par = models.ManyToManyField('self', verbose_name='part of', symmetrical=False,
+                                 help_text='things of which this is a part of'
+                                           '(a window is a part of a car, a house, a boat, etc.)',
+                                 related_name='comprises')
+    bga = models.ManyToManyField('self', verbose_name='frequent followers', symmetrical=False,
+                                 help_text='words that frequently follow this '
+                                           '(i.e. wreak followed by havoc',
+                                 related_name='frequently_follows')
+    bgb = models.ManyToManyField('self', verbose_name='frequent predecessors', symmetrical=False,
+                                 help_text='words that frequently precede this'
+                                           '(i.e. havoc preceding wreak',
+                                 related_name='frequently_precedes')
+    rhy = models.ManyToManyField('self', verbose_name='rhymes', help_text='perfect rhymes',
+                                 related_name='rhymes', related_query_name='rhyme')
+    nry = models.ManyToManyField('self', verbose_name='near rhymes', help_text='approximate rhymes',
+                                 related_name='near_rhymes', related_query_name='near_rhyme')
+    hom = models.ManyToManyField('self', verbose_name='homophones', help_text='sound-alike words',
+                                 related_name='homophones', related_query_name='homophone')
+    cns = models.ManyToManyField('self', verbose_name='consonant matches', help_text='i.e. sample and simple',
+                                 related_name='consonant_matches', related_query_name='consonant_match')
     # todo review which many-to-many fields should be asymmetrical
     # todo add rel_name and rel_query_name if/where appropriate for asymmetrical fields
 

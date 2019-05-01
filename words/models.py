@@ -87,7 +87,7 @@ class Language(models.Model):
 
     def __str__(self):
         """String for representing the Model object"""
-        return self.name
+        return self.get_name_display()
 
     # todo method (may not belong in models) to add "v=name", if name not en, to DataMuse queries
     # todo setting or property somewhere to indicate DataMuse parameters not supported by a language
@@ -116,7 +116,7 @@ class PartOfSpeech(models.Model):
 
     def __str__(self):
         """String for representing the Model object"""
-        return self.name
+        return self.get_name_display()
 
     # todo confirm what is returned by __str__()
 

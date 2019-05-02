@@ -1,5 +1,6 @@
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class Word(models.Model):
@@ -118,6 +119,24 @@ class PartOfSpeech(models.Model):
         """String for representing the Model object"""
         return self.get_name_display()
 
-    # todo confirm what is returned by __str__()
 
+class WordSet(models.Model):
+    """"A user-defined set of words that have something in common, such as appearing in a certain book."""
+    name = models.CharField(max_length=100, help_text="Enter a name for this set of words")
+    description = models.TextField(blank=True, help_text="Enter a description for this set of words")
+
+    # todo confirm I want owner-less WordSets to be possible (probably)
+    owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+
+    # todo creating an owner-less WordSet would require setting this to False
+    # todo disallow setting to True if no owner
+    # todo delete private WordSets that belong to a user when user deleted
+    # todo user permissions
+    private = models.BooleanField(default=False)
+
+    words = models.ManyToManyField(Word, related_query_name='word', blank=True)
+
+    def __str__(self):
+        """String for representing the Model object"""
+        return f'{self.name} (created by {self.owner})'
 

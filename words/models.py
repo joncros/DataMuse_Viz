@@ -1,4 +1,4 @@
-from django.contrib.postgres.fields import ArrayField, JSONField
+from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -7,6 +7,7 @@ class Word(models.Model):
     """Model representing a word and its relationships to other words."""
     name = models.CharField(max_length=100)
     parts_of_speech = models.ManyToManyField('PartOfSpeech', blank=True)
+    language = models.OneToOneField('Language', blank=False)
 
     # number of occurrences per million words of english text
     frequency = models.DecimalField(max_digits=12, decimal_places=6, null=True, blank=True)
@@ -126,6 +127,7 @@ class WordSet(models.Model):
     description = models.TextField(blank=True, help_text="Enter a description for this set of words")
 
     # todo confirm I want owner-less WordSets to be possible (probably)
+    # todo or have "anonymous" user?
     owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
 
     # todo creating an owner-less WordSet would require setting this to False

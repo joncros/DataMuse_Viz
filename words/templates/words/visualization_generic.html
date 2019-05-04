@@ -1,0 +1,46 @@
+{% extends "words/base_generic.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <!--Row 1: Title/Subtitle -->
+    <div class="row">
+        <div class="col-lg-12 col-sm-12 col-xs-12 title">
+            <!-- <div id="maintitle"></div>
+            <div id="subtitle"></div> -->
+        </div>
+    </div>
+
+    <!--Row 2: Visualization Chart/Legend/Additional tools and buttons-->
+    <div class="row" id="mainrow">
+        <div id="legend" class="col-lg-4 col-sm-4 col-xs-4">
+            <!--Explanatory text and legend belonging to visualization here-->
+            <p>documentation</p>
+            <p>documentation documentation documentation documentation documentation
+                documentation documentation documentation documentation documentation
+                documentation documentation documentation documentation documentation </p>
+            {% block viz-text %} {% endblock %}
+            {% block legend %} {% endblock %}
+        </div>
+
+        <!--div chart for the acutal visualization-->
+        <div id="visualization" class="col-lg-8 col-sm-8 col-xs-8">
+            <!--visualization of DataMuse data here-->
+            <p>visualization</p>
+            {% block viz %} {% endblock %}
+        </div>
+    </div>
+
+    <!--Row 3: Word Input Form-->
+    <div class="row" class="col-lg-12 col-md-12 col-sm-12">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <p>Word form</p>
+                {% block word_form %}
+                <!--Form used to input a single word and query DataMuse re: that word-->
+                {% endblock %}
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

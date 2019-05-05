@@ -2,6 +2,7 @@
 
 {% block content %}
 <div class="container-fluid">
+<div class="panel-group">
     <!--Row 1: Title/Subtitle -->
     <div class="row">
         <div class="col-lg-12 col-sm-12 col-xs-12 title">
@@ -10,27 +11,39 @@
         </div>
     </div>
 
-    <!--Row 2: Visualization Chart/Legend/Additional tools and buttons-->
-    <div class="row" id="mainrow">
-        <div id="legend" class="col-lg-4 col-sm-4 col-xs-4">
+    <!--Row 2: Login/Logout-->
+    <div class="row">
+        <div id="auth" class="panel panel-default col-lg-3 col-sm-3 col-xs-3">
+            <div class="panel-body">
+                <!--Login/logout form (django.contrib.auth.forms) here-->
+                <p>Login</p>
+            </div>
+        </div>
+    </div>
+
+    <!--Row 3: Visualization Chart/Legend/Additional tools and buttons-->
+    <div class="row">
+        <div id="legend" class="panel panel-default col-lg-3 col-sm-3 col-xs-3">
             <!--Explanatory text and legend belonging to visualization here-->
+            <div class="panel-body">
             <p>documentation</p>
             <p>documentation documentation documentation documentation documentation
                 documentation documentation documentation documentation documentation
                 documentation documentation documentation documentation documentation </p>
             {% block viz-text %} {% endblock %}
             {% block legend %} {% endblock %}
+            </div>
         </div>
 
         <!--div chart for the acutal visualization-->
-        <div id="visualization" class="col-lg-8 col-sm-8 col-xs-8">
+        <div id="visualization" class="col-lg-9 col-sm-9 col-xs-9">
             <!--visualization of DataMuse data here-->
             <p>visualization</p>
             {% block viz %} {% endblock %}
         </div>
     </div>
 
-    <!--Row 3: Word Input Form-->
+    <!--Row 4: Word Input Form-->
     <div class="row" class="col-lg-12 col-md-12 col-sm-12">
         <div class="panel panel-default">
             <div class="panel-body">
@@ -41,6 +54,7 @@
             </div>
         </div>
 
+    </div>
     </div>
 </div>
 {% endblock %}

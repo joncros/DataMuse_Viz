@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.contrib.auth.models import User
@@ -93,8 +94,6 @@ class Word(models.Model):
                                  related_name='homophones', related_query_name='homophone')
     cns = models.ManyToManyField('self', verbose_name='consonant matches', help_text='i.e. sample and simple',
                                  related_name='consonant_matches', related_query_name='consonant_match')
-    # todo review which many-to-many fields should be asymmetrical
-    # todo add rel_name and rel_query_name if/where appropriate for asymmetrical fields
 
     def __str__(self):
         """String for representing the Model object"""
@@ -130,7 +129,7 @@ class WordSet(models.Model):
     """"A user-defined set of words that have something in common, such as appearing in a certain book."""
     name = models.CharField(max_length=100, help_text="Enter a name for this set of words")
     description = models.TextField(blank=True, help_text="Enter a description for this set of words")
-    creator = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     words = models.ManyToManyField(Word, related_query_name='word', blank=True)
 
     def __str__(self):

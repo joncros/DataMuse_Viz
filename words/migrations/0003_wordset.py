@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(help_text='Enter a name for this set of words', max_length=100)),
                 ('description', models.TextField(blank=True, help_text='Enter a description for this set of words')),
                 ('private', models.BooleanField(default=False)),
-                ('owner', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
+                ('creator', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
                 ('words', models.ManyToManyField(blank=True, related_query_name='word', to='words.Word')),
             ],
         ),

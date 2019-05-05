@@ -1,4 +1,7 @@
 from django.shortcuts import render
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
+
+from words.models import WordSet
 
 
 def index(request):
@@ -26,3 +29,14 @@ def viz_test(request):
     }
 
     return render(request, 'words/visualization_generic.html', context)
+
+
+class WordSetCreate(CreateView):
+    model = WordSet
+    fields = ['name', 'description']
+
+    def __init__(self):
+        super(self).__init__()
+
+    # def form_valid(self, form):
+    #     if self.request.user

@@ -3,11 +3,42 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
+class Language(models.Model):
+    """Model representing a language supported by DataMuse (currently, English or Spanish"""
+
+    # tuple holding available language choices. first item in each nested tuple is the ISO 639-1 code
+    name_choices = (
+        ('en', 'English'),
+        ('es', 'Spanish'),
+    )
+
+    name = models.CharField(
+        max_length=2,
+        choices=name_choices,
+        blank=False,
+        default='en',
+        help_text='Language',
+    )
+
+    def __str__(self):
+        """String for representing the Model object"""
+        return self.get_name_display()
+
+    # todo method (may not belong in models) to add "v=name", if name not en, to DataMuse queries
+    # todo setting or property somewhere to indicate DataMuse parameters not supported by a language
+
+
+def default_language():
+    lang = Language()
+    lang.save()
+    return lang.pk
+
+
 class Word(models.Model):
     """Model representing a word and its relationships to other words."""
     name = models.CharField(max_length=100)
     parts_of_speech = models.ManyToManyField('PartOfSpeech', blank=True)
-    language = models.OneToOneField('Language', blank=False)
+    language = models.OneToOneField('Language', blank=False, default=default_language, on_delete=models.PROTECT)
 
     # number of occurrences per million words of english text
     frequency = models.DecimalField(max_digits=12, decimal_places=6, null=True, blank=True)
@@ -70,32 +101,6 @@ class Word(models.Model):
         return self.name
 
 
-class Language(models.Model):
-    """Model representing a language supported by DataMuse (currently, English or Spanish"""
-
-    # tuple holding available language choices. first item in each nested tuple is the ISO 639-1 code
-    name_choices = (
-        ('en', 'English'),
-        ('es', 'Spanish'),
-    )
-
-    name = models.CharField(
-        max_length=2,
-        choices=name_choices,
-        blank=False,
-        default='en',
-        help_text='Language',
-    )
-
-    def __str__(self):
-        """String for representing the Model object"""
-        return self.get_name_display()
-
-    # todo method (may not belong in models) to add "v=name", if name not en, to DataMuse queries
-    # todo setting or property somewhere to indicate DataMuse parameters not supported by a language
-    # todo confirm what is returned by __str__()
-
-
 class PartOfSpeech(models.Model):
     """Model representing a part of speech (noun, verb, adjective, adverb or unknown."""
 
@@ -126,12 +131,12 @@ class WordSet(models.Model):
     name = models.CharField(max_length=100, help_text="Enter a name for this set of words")
     description = models.TextField(blank=True, help_text="Enter a description for this set of words")
 
-    # todo confirm I want owner-less WordSets to be possible (probably)
+    # todo confirm I want creator-less WordSets to be possible (probably)
     # todo or have "anonymous" user?
-    owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    creator = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
 
-    # todo creating an owner-less WordSet would require setting this to False
-    # todo disallow setting to True if no owner
+    # todo creating an creator-less WordSet would require setting this to False
+    # todo disallow setting to True if no creator
     # todo delete private WordSets that belong to a user when user deleted
     # todo user permissions
     private = models.BooleanField(default=False)
@@ -140,5 +145,5 @@ class WordSet(models.Model):
 
     def __str__(self):
         """String for representing the Model object"""
-        return f'{self.name} (created by {self.owner})'
+        return f'{self.name} (created by {self.creator})'
 

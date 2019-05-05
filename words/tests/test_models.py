@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 
 from words.models import Word, Language, PartOfSpeech, WordSet
 
+
 class WordTest(TestCase):
     """Tests model class Word"""
 
@@ -17,6 +18,11 @@ class WordTest(TestCase):
         expected_object_name = "apple"
         self.assertEqual(expected_object_name, str(word))
 
+    def test_default_language(self):
+        word = Word.objects.get(id=1)
+        expected_object_language = 'en'
+        self.assertEqual(expected_object_language, word.language.name)
+
 
 class LanguageTest(TestCase):
     @classmethod
@@ -29,6 +35,7 @@ class LanguageTest(TestCase):
         expected_object_name = "English"
         self.assertEqual(expected_object_name, str(lang))
 
+
 class PartOfSpeechTest(TestCase):
     @classmethod
     def setUpTestData(cls):
@@ -40,33 +47,22 @@ class PartOfSpeechTest(TestCase):
         expected_object_name = "adjective"
         self.assertEqual(expected_object_name, str(part))
 
+
 class WordSetTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         # Set up non-modified objects used by all test methods
         test_user = User.objects.create_user(username='testuser', password='1X<ISRUkw+tuK')
-        WordSet.objects.create(name="Test Set 1", owner=test_user)
+        WordSet.objects.create(name="Test Set 1", creator=test_user)
+        WordSet.objects.create(name="Test Set 2")
 
     def test_object_name(self):
         set = WordSet.objects.get(name="Test Set 1")
         expected_object_name = "Test Set 1 (created by testuser)"
         self.assertEqual(expected_object_name, str(set))
 
-    def test_error_if_create_private_wordset_with_blank_owner(self):
-        # Should fail if ValidationError is not raised
-        with self.assertRaises(ValidationError):
-            WordSet.objects.create(name="Test Set 2", private=True)
-
-    def test_error_if_wordset_without_owner_set_to_private(self):
-        wset = WordSet.objects.create(name="Test Set 2")
-        with self.assertRaises(ValidationError):
-            wset.private = True
-            wset.save()
-
-    def test_deleting_user_should_delete_owned_private_wordsets(self):
-        test_user2 = User.objects.create_user(username='testuser2', password='kw+tuK1X<ISRU')
-        WordSet.objects.create(name="Test Set 2", owner=test_user2, private=True)
-        test_user2.delete()
-        exists = WordSet.objects.filter(name="Test Set 2").exists()
-        self.assertFalse(exists)
+    def test_object_name_with_no_creator(self):
+        set = WordSet.objects.get(name="Test Set 2")
+        expected_object_name = "Test Set 2"
+        self.assertEqual(expected_object_name, str(set))
 

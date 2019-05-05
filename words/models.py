@@ -130,20 +130,13 @@ class WordSet(models.Model):
     """"A user-defined set of words that have something in common, such as appearing in a certain book."""
     name = models.CharField(max_length=100, help_text="Enter a name for this set of words")
     description = models.TextField(blank=True, help_text="Enter a description for this set of words")
-
-    # todo confirm I want creator-less WordSets to be possible (probably)
-    # todo or have "anonymous" user?
     creator = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-
-    # todo creating an creator-less WordSet would require setting this to False
-    # todo disallow setting to True if no creator
-    # todo delete private WordSets that belong to a user when user deleted
-    # todo user permissions
-    private = models.BooleanField(default=False)
-
     words = models.ManyToManyField(Word, related_query_name='word', blank=True)
 
     def __str__(self):
         """String for representing the Model object"""
-        return f'{self.name} (created by {self.creator})'
+        creator_string = ''
+        if self.creator is not None:
+            creator_string = f' (created by {self.creator})'
+        return f'{self.name}' + creator_string
 

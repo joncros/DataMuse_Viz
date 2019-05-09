@@ -22,10 +22,12 @@
                     <p><a href="{% url 'logout'%}?next={{request.path}}">Logout</a></p>
                 {% else %}
                     <!--Display login form-->
+                    <!--Bug: desired behavior is to stay on this page, but if username and password don't match,
+                    it redirects to login.html to display the errors-->
                     {% if auth_form.errors %}
                         <p>Your username and password didn't match. Please try again.</p>
                     {% endif %}
-                    <form method="post">
+                    <form method="post" action="{% url 'login' %}?next={{request.path}}">
                         {% csrf_token %}
                         {{ auth_form.as_p }}
                         <input type="submit" value="login"/>

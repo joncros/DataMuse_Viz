@@ -19,6 +19,8 @@ from django.contrib import admin
 from django.views.generic import RedirectView
 from django.urls import path, include
 
+from datamuse_viz import views
+
 urlpatterns = [
     path('admin/', admin.site.urls),
 
@@ -34,5 +36,6 @@ urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 # Add Django site authentication urls (for login, logout, password management)
 urlpatterns += [
-    path('accounts/', include('django.contrib.auth.urls')),
+    path('accounts/', include('django.contrib.auth.urls')),  # django built-in user account views
+    path('accounts/registration/', views.UserRegistration.as_view(), name='user registration')  # user creation
 ]

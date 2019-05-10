@@ -1,4 +1,4 @@
-{% extends "words/base_generic.html" %}
+{% extends "base_generic.html" %}
 
 {% block content %}
 <div class="container-fluid">
@@ -16,7 +16,29 @@
         <div id="auth" class="panel panel-default col-lg-3 col-sm-3 col-xs-3">
             <div class="panel-body">
                 <!--Login/logout form (django.contrib.auth.forms) here-->
-                <p>Login</p>
+                {% if user.is_authenticated %}
+                <!--Display username and logout button-->
+                    <p>User: {{ user.get_username }}</p>
+                    <p><a href="{% url 'logout'%}?next={{request.path}}">Logout</a></p>
+                {% else %}
+                    <!--Display login form-->
+                    {% if auth_form.errors %}
+                        <p>Your username and password didn't match. Please try again.</p>
+                    {% endif %}
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ auth_form.as_p }}
+                        <input type="submit" value="login"/>
+
+                        {% comment %}
+                        <label for="username">User name:</label>
+                        <input type="text" name="username" value="" id="username">
+                        <label for="password">Password:</label>
+                        <input type="password" name="password" value="" id="password">
+                        <input type="submit" value="login"/>
+                        {% endcomment %}
+                    </form>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -47,10 +69,13 @@
     <div class="row" class="col-lg-12 col-md-12 col-sm-12">
         <div class="panel panel-default">
             <div class="panel-body">
-                <p>Word form</p>
-                {% block word_form %}
+                <p>Enter word to generate visualization from</p>
                 <!--Form used to input a single word and query DataMuse re: that word-->
-                {% endblock %}
+                <form class="form-inline" action="" method="post">
+                    {% csrf_token %}
+                    {{ word_form }}
+                    <input type="submit" value="Submit">
+                </form>
             </div>
         </div>
 

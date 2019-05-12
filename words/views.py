@@ -36,7 +36,9 @@ def viz_test(request):
 
 def get_relation_viz(request):
     """View for the word relationship visualization"""
-    context = {}
+    context = {
+        'viz_title': 'Word Relationships',
+    }
 
     if request.method == 'POST':
         # create form instances and populate them with data from the request:

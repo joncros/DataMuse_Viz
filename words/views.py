@@ -10,7 +10,7 @@ from words.models import WordSet
 def index(request):
     """View function for home tab of site."""
     context = {
-        "index": "active"   # make "Home" the active item in the navbar
+        "navbar_index": "active"   # make "Home" the active item in the navbar
                }
 
     return render(request, 'words/index.html', context)
@@ -20,7 +20,7 @@ def get_relation_viz(request):
     """View for the word relationship visualization"""
     context = {
         'viz_title': 'Word Relationships',  # Visualization title to use in page title
-        'relation_viz': 'active'    # make "Word Relationships Visualization" the active item in the navbar
+        'navbar_relation_viz': 'active'    # make "Word Relationships Visualization" the active item in the navbar
     }
 
     if request.method == 'POST':

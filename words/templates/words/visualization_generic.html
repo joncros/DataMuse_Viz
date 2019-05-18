@@ -13,41 +13,7 @@
         </div>
     </div>
 
-    <!--Row 2: Login/Logout-->
-    <div class="row">
-        <div id="auth" class="panel panel-default col-lg-3 col-sm-3 col-xs-3">
-            <div class="panel-body">
-                <!--Login/logout form (django.contrib.auth.forms) here-->
-                {% if user.is_authenticated %}
-                <!--Display username and logout button-->
-                    <p>User: {{ user.get_username }}</p>
-                    <p><a href="{% url 'logout'%}?next={{request.path}}">Logout</a></p>
-                {% else %}
-                    <!--Display login form-->
-                    <!--Bug: desired behavior is to stay on this page, but if username and password don't match,
-                    it redirects to login.html to display the errors-->
-                    {% if auth_form.errors %}
-                        <p>Your username and password didn't match. Please try again.</p>
-                    {% endif %}
-                    <form method="post" action="{% url 'login' %}?next={{request.path}}">
-                        {% csrf_token %}
-                        {{ auth_form.as_p }}
-                        <input type="submit" value="login"/>
-
-                        {% comment %}
-                        <label for="username">User name:</label>
-                        <input type="text" name="username" value="" id="username">
-                        <label for="password">Password:</label>
-                        <input type="password" name="password" value="" id="password">
-                        <input type="submit" value="login"/>
-                        {% endcomment %}
-                    </form>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-
-    <!--Row 3: Visualization Chart/Legend/Additional tools and buttons-->
+    <!--Row 2: Visualization Chart/Legend/Additional tools and buttons-->
     <div class="row">
         <div id="legend" class="panel panel-default col-lg-3 col-sm-3 col-xs-3">
             <!--Explanatory text and legend belonging to visualization here-->
@@ -69,7 +35,7 @@
         </div>
     </div>
 
-    <!--Row 4: Word Input Form-->
+    <!--Row 3: Word Input Form-->
     <div class="row" class="col-lg-12 col-md-12 col-sm-12">
         <div class="panel panel-default">
             <div class="panel-body">

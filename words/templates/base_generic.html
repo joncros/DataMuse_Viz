@@ -25,6 +25,27 @@
                     <li><a href="#">Page 3</a></li>
                     {% endcomment %}
                 </ul>
+
+                <ul class="nav navbar-nav navbar-right">
+                    {% if user.is_authenticated %}
+                        <!--Display username and logout button-->
+                        <li class="navbar-text">User: {{ user.get_username }}</li>
+                        <li><a href="{% url 'logout'%}?next={{request.path}}">Logout</a></li>
+                    {% else %}
+                        <!--Show link to create account-->
+                        <li><a href="{% url 'user registration' %}?next={{request.path}}">User Registration</a></li>
+                </ul>
+                    <!--Display login form (continues else)-->
+                    <!--not working-->
+                <form class="navbar-form navbar-right" method="post" action="{% url 'login' %}?next={{request.path}}">
+                    {% csrf_token %}
+                    <label for="id_username">Username:</label>
+                    <input id="id_username" type="text" name="username"/>
+                    <label for="id_password">Password:</label>
+                    <input type="password" name="password" id="id_password"/>
+                    <input type="submit" value="Log in"/>
+                </form>
+                    {% endif%}
             </div>
         </nav>
 

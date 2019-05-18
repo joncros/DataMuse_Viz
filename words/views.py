@@ -18,30 +18,23 @@ def index(request):
 
 def get_relation_viz(request):
     """View for the word relationship visualization"""
-    context = {
-        'viz_title': 'Word Relationships',  # Visualization title to use in page title
-        'navbar_relation_viz': 'active'    # make "Word Relationships Visualization" the active item in the navbar
-    }
+    # todo refactor into class-based visualization view that I can subclass?
+
+    # todo add visualization description string to context
 
     if request.method == 'POST':
         # create form instances and populate them with data from the request:
         word_form = WordForm(request.POST)
 
-        if not request.user.is_authenticated:
-            # no user logged in, get login information from auth_form
-            auth_form = AuthenticationForm(request.POST)
-            context['auth_form'] = auth_form
-
     # if a GET (or any other method) create a blank form
     else:
         word_form = WordForm()
-        if not request.user.is_authenticated:
-            # display blank login form, add it to context
-            auth_form = AuthenticationForm()
-            context['auth_form'] = auth_form
 
-    # always add word_form to context
-    context['word_form'] = word_form
+    context = {
+        'viz_title': 'Word Relationships',  # Visualization title to use in page title
+        'navbar_relation_viz': 'active',  # make "Word Relationships Visualization" the active item in the navbar
+        'word_form': word_form,
+    }
 
     return render(request, 'words/visualization_generic.html', context)
 

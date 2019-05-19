@@ -1,0 +1,13 @@
+{% extends "words/visualization_generic.html" %}
+
+{% block scripts %}<!--Specific script(s) used for word relationships visualization-->{% endblock %}
+
+{% block visualization_form %}
+    <p>Enter word to generate visualization from</p>
+    <form class="form-inline" action="" method="post">
+        <!--Form used to input a single word (optionally adding it to a WordSet) for the DataMuse query-->
+        {% csrf_token %}
+        {{ word_form }}
+        <input type="submit" value="Submit">
+    </form>
+{% endblock %}

@@ -36,7 +36,13 @@ def get_relation_viz(request):
         'word_form': word_form,
     }
 
-    return render(request, 'words/visualization_generic.html', context)
+    return render(request, 'words/word_relationships.html', context)
+
+
+# todo view for page visualizing the frequency (google nwords) of words in a set (bubble chart)
+
+
+# todo? view for page visualizing # of occurrences of words in a set of words vs nwords frequency of the words
 
 
 class WordSetCreate(CreateView):

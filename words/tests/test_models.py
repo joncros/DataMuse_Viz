@@ -13,13 +13,13 @@ class WordTest(TestCase):
         # Set up non-modified objects used by all test methods
         Word.objects.create(name="apple")
 
-    def test_object_name(self):
-        word = Word.objects.get(id=1)
+    def test_object_string(self):
+        word = Word.objects.get(name="apple")
         expected_object_name = "apple"
         self.assertEqual(expected_object_name, str(word))
 
     def test_default_language(self):
-        word = Word.objects.get(id=1)
+        word = Word.objects.get(name="apple")
         expected_object_language = 'en'
         self.assertEqual(expected_object_language, word.language.name)
 
@@ -28,12 +28,13 @@ class LanguageTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         # Set up non-modified objects used by all test methods
-        Language.objects.create()
+        # Language.objects.create()
+        Word.objects.create(name="apple")
 
-    def test_object_name(self):
-        lang = Language.objects.get(id=1)
-        expected_object_name = "English"
-        self.assertEqual(expected_object_name, str(lang))
+    def test_object_string_is_verbose(self):
+        lang = Word.objects.get(name='apple').language
+        expected_object_string = "English"
+        self.assertEqual(expected_object_string, str(lang))
 
 
 class PartOfSpeechTest(TestCase):

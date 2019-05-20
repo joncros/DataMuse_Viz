@@ -1,4 +1,5 @@
 from django import forms
+from django.utils.translation import ugettext_lazy as _
 
 from words.models import Word, WordSet
 
@@ -38,6 +39,8 @@ class WordSetForm(forms.ModelForm):
 class WordForm(forms.ModelForm):
     """Form to input a word and send a DataMuse Query"""
     relation = forms.ChoiceField(choices=relations)
+    # todo (in views?) use relation choice to display correct visualization. pass relation to context?
+
     # word_sets = WordSet.objects().filter(creator__exact=None)
     # word_sets += WordSet.objects().filter(creator__exact=self.user)
     word_set = forms.ModelChoiceField(queryset=WordSet.objects.all(), widget=forms.Select, required=False)
@@ -47,8 +50,9 @@ class WordForm(forms.ModelForm):
     class Meta:
         model = Word
         fields = ['name', 'language', ]
+        labels = {'name': _('Word')}
 
-    # def __init__(self, *args, **kwargs):
+        # def __init__(self, *args, **kwargs):
     #     self.user = kwargs.pop('user', None)
     #     super(WordForm, self).__init__(*args, **kwargs)
     #     # if I only wanted to show WordSets created by current user:

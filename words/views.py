@@ -1,6 +1,9 @@
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.forms import AuthenticationForm
 from django.shortcuts import render
+from django.urls import reverse_lazy
+from django.views import generic
+from django.views.generic.base import ContextMixin
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 
 from words.forms import WordForm
@@ -43,6 +46,10 @@ def get_relation_viz(request):
 
 
 # todo? view for page visualizing # of occurrences of words in a set of words vs nwords frequency of the words
+
+
+class WordSetDetailView(generic.DetailView):
+    model = WordSet
 
 
 class WordSetCreate(CreateView):

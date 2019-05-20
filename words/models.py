@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.contrib.auth.models import User
+from django.urls import reverse
 
 
 class Language(models.Model):
@@ -135,7 +136,11 @@ class WordSet(models.Model):
     name = models.CharField(max_length=100, help_text="Enter a name for this set of words")
     description = models.TextField(blank=True, help_text="Enter a description for this set of words")
     creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
-    words = models.ManyToManyField(Word, related_query_name='word', blank=True)
+    words = models.ManyToManyField(Word, related_name='words', related_query_name='word', blank=True)
+
+    def get_absolute_url(self):
+        """Returns the url to access a particular wordset instance."""
+        return reverse('wordset-detail', args=[str(self.id)])
 
     def __str__(self):
         """String for representing the Model object"""

@@ -96,6 +96,10 @@ class Word(models.Model):
     cns = models.ManyToManyField('self', blank=True, verbose_name='consonant matches', help_text='i.e. sample and simple',
                                  related_name='consonant_matches', related_query_name='consonant_match')
 
+    class Meta:
+        # for each language, there should be only one word with a certain name
+        constraints = [models.UniqueConstraint(fields=['name', 'language'], name='unique_word_per_language'), ]
+
     def __str__(self):
         """String for representing the Model object"""
         return self.name

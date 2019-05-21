@@ -13,7 +13,21 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+import sys
+
+from django.core.exceptions import ImproperlyConfigured
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+# Handling Key Import Errors
+def get_env_variable(var_name):
+    """ Get the environment variable or return exception """
+    try:
+        return os.environ[var_name]
+    except KeyError:
+        error_msg = "Set the %s environment variable" % var_name
+        raise ImproperlyConfigured(error_msg)
 
 
 # Quick-start development settings - unsuitable for production
@@ -130,3 +144,34 @@ LOGIN_REDIRECT_URL = '/'
 
 # Log any emails sent to the console instead of sending them (for testing password reset during development)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# get environment variable for logging level for datamuse_viz (default 'info')
+LOGLEVEL = os.environ.get('LOGLEVEL', 'info').upper()
+
+# Log to console: django messages of INFO or higher; datamuse_viz logging level from environment variable
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{module} {funcName} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+        },
+        'words': {
+            'handlers': ['console'],
+            'level': LOGLEVEL,
+        }
+    },
+}

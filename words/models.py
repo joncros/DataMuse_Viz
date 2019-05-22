@@ -101,6 +101,10 @@ class Word(models.Model):
         # for each language, there should be only one word with a certain name
         constraints = [models.UniqueConstraint(fields=['name', 'language'], name='unique_word_per_language'), ]
 
+    def save(self, *args, **kwargs):
+        self.name = self.name.lower()  # Convert name to lowercase
+        super().save(*args, **kwargs)  # Call the "real" save() method.
+
     def __str__(self):
         """String for representing the Model object"""
         return self.name
@@ -138,13 +142,18 @@ class WordSet(models.Model):
     creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     words = models.ManyToManyField(Word, related_name='words', related_query_name='word', blank=True)
 
+    class Meta:
+        # for each creator, there should only be one wordset with a given name
+        constraints = [models.UniqueConstraint(fields=['name', 'creator'], name='unique_wordset_name_per_creator'), ]
+
     def get_absolute_url(self):
         """Returns the url to access a particular wordset instance."""
         return reverse('wordset-detail', args=[str(self.id)])
 
     def __str__(self):
         """String for representing the Model object"""
-        creator_string = ''
+        # if creator null, UniqueConstraint cannot be enforced; so identify wordset by name and id
+        creator_string = f' ({self.id})'
         if self.creator is not None:
             creator_string = f' (created by {self.creator})'
         return f'{self.name}' + creator_string

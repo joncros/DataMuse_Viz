@@ -1,4 +1,5 @@
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 from django.test import TestCase
 from django.contrib.auth.models import User
 
@@ -22,6 +23,15 @@ class WordTest(TestCase):
         word = Word.objects.get(name="apple")
         expected_object_language = 'en'
         self.assertEqual(expected_object_language, word.language.name)
+
+    def test_uppercase_characters_in_name_converted_to_lowercase(self):
+        word = Word.objects.create(name="walKABOUT")
+        expected_object_name = 'walkabout'
+        self.assertEqual(word.name, expected_object_name)
+
+    def test_word_create_with_duplicate_name(self):
+        with self.assertRaises(IntegrityError):
+            Word.objects.create(name="apple")
 
 
 class LanguageTest(TestCase):
@@ -64,6 +74,11 @@ class WordSetTest(TestCase):
 
     def test_object_name_with_no_creator(self):
         set = WordSet.objects.get(name="Test Set 2")
-        expected_object_name = "Test Set 2"
+        expected_object_name = f'Test Set 2 ({set.id})'
         self.assertEqual(expected_object_name, str(set))
+
+    def test_unique_wordset_name_per_creator(self):
+        test_user = User.objects.get(username='testuser')
+        with self.assertRaises(IntegrityError):
+            WordSet.objects.create(name="Test Set 1", creator=test_user, description="one")
 

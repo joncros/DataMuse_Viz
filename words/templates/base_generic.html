@@ -20,6 +20,7 @@
                 </div>
                 <ul class="nav navbar-nav">
                     <li class="{{ navbar_index }}"><a href="{% url 'index' %}">Home</a></li>
+                    <li class="{{ navbar_wordset_create }}"><a href="{% url 'wordset_create' %}">Create Word Set</a></li>
                     <li class="{{ navbar_relation_viz }}"><a href="{% url 'relations viz' %}">Word Relationships Visualization</a></li>
                     {% comment %}
                     <li><a href="{% url 'viz test' %}">Visualization Test</a></li>

@@ -1,7 +1,13 @@
+import logging
+
 from django import forms
+from django.forms import Textarea
 from django.utils.translation import ugettext_lazy as _
 
 from words.models import Word, WordSet
+
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
 
 # tuple holding word relationship types
 relations = (
@@ -23,17 +29,62 @@ relations = (
 )
 
 
-class WordSetForm(forms.ModelForm):
+class WordCharField(forms.CharField):
+    """Custom CharField that treats each line from the Widget as a separate string and returns a list"""
+
+    widget = Textarea
+
+    def to_python(self, value):
+        if not value:
+            return []
+        else:
+            # an HTML line break in an input fields is CR LF
+            return value.split('\r\n')
+
+
+class WordSetCreateForm(forms.ModelForm):
     """Form to create a WordSet"""
+
+    # Field allows user to type one word or phrase (to be added to the new WordSet) per line in the Textarea
+    words = WordCharField(strip=False, help_text="Type the words to include in the set (one word or phrase per line)")
 
     class Meta:
         model = WordSet
-        fields = ['name', 'description', ]
+        fields = ['name', 'description', 'creator']
+
+        # hide creator field; field needed so validation occurs for model 'unique_wordset_name_per_creator' constraint
+        widgets = {'creator': forms.HiddenInput()}
+
+    def save(self, commit=True):
+        # todo run DataMuse query for each word from words field
+
+        logger.debug('WordSetCreateForm save')
+
+        # do initial save of new wordset
+        instance = super(WordSetCreateForm, self).save(commit=commit)
+
+        # get or create Words from 'words' field, add to instance field "words"
+        for word in self.cleaned_data['words']:
+            logger.debug(f'word from Textarea: {word}')
+            # instance is the first item in the tuple returned by get_or_create
+            word_instance = Word.objects.get_or_create(name=word)[0]
+            self.instance.words.add(word_instance)
+
+        if commit:
+            instance.save()
+        return instance
 
     def __init__(self, *args, **kwargs):
         # get current user
         self.user = kwargs.pop('user', None)
-        super(WordSetForm, self).__init__(*args, **kwargs)
+        super(WordSetCreateForm, self).__init__(*args, **kwargs)
+        logger.debug(self.user)
+        if self.user and self.user.is_authenticated:
+            self.fields['creator'].initial = self.user  # set creator to current user
+        else:
+            # no authenticated user, set creator field to blank
+            logger.debug("self.user is AnonymousUser")
+            self.fields['creator'].initial = ''
 
 
 class WordForm(forms.ModelForm):

@@ -9,5 +9,6 @@
         {% csrf_token %}
         {{ word_form }}
         <input type="submit" value="Submit">
+        <a href="{% url 'wordset_create' %}?next={{request.path}}">Create New Word Set</a>
     </form>
 {% endblock %}

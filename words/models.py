@@ -137,7 +137,7 @@ class PartOfSpeech(models.Model):
 
 class WordSet(models.Model):
     """"A user-defined set of words that have something in common, such as appearing in a certain book."""
-    name = models.CharField(max_length=100, help_text="Enter a name for this set of words")
+    name = models.CharField(max_length=100, help_text="Enter a unique name for this set of words")
     description = models.TextField(blank=True, help_text="Enter a description for this set of words")
     creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     words = models.ManyToManyField(Word, related_name='words', related_query_name='word', blank=True)

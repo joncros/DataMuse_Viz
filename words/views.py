@@ -84,19 +84,25 @@ class WordSetCreate(CreateView):
             return self.object.get_absolute_url()
 
 
-
-
-
-
-
-
-
 class WordSetDelete(DeleteView):
     model = WordSet
     success_url = reverse_lazy('index')
 
-# class WordSetListView(generic.ListView):
-#     model = WordSet
+
+class WordSetListView(generic.ListView):
+    model = WordSet
+
+    def get_context_data(self, **kwargs):
+        context = super(WordSetListView, self).get_context_data()
+        context['navbar_wordsets'] = 'active'
+        return context
+
+
+
+
+
+
+
 
 # views providing json data required by visualizations
 

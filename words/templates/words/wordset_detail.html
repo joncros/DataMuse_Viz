@@ -14,4 +14,10 @@
         {% endfor %}
     </ul>
 
+    {% if user.is_authenticated %}
+        {% if user == wordset.creator %}
+            <p><a href="{% url 'wordset_delete' pk=wordset.id %}">Delete Word Set</a></p>
+        {% endif %}
+    {% endif %}
+
 {% endblock %}

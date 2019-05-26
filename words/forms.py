@@ -78,12 +78,12 @@ class WordSetCreateForm(forms.ModelForm):
         # get current user
         self.user = kwargs.pop('user', None)
         super(WordSetCreateForm, self).__init__(*args, **kwargs)
-        logger.debug(self.user)
         if self.user and self.user.is_authenticated:
+            logger.debug(f'self.user: {self.user}')
             self.fields['creator'].initial = self.user  # set creator to current user
         else:
             # no authenticated user, set creator field to blank
-            logger.debug("self.user is AnonymousUser")
+            logger.debug("self.user is AnonymousUser or None")
             self.fields['creator'].initial = ''
 
 

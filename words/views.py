@@ -2,6 +2,8 @@ import logging
 
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.mixins import UserPassesTestMixin, AccessMixin
+from django.core.exceptions import ImproperlyConfigured
 from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views import generic
@@ -84,15 +86,26 @@ class WordSetCreate(CreateView):
             return self.object.get_absolute_url()
 
 
-class WordSetDelete(DeleteView):
+class WordSetDelete(UserPassesTestMixin, DeleteView):
     model = WordSet
     success_url = reverse_lazy('index')
+
+    # Deny access if WordSet creator is not signed in
+    def test_func(self):
+        creator = self.get_object().creator
+        return self.request.user == creator
+
+    def dispatch(self, request, *args, **kwargs):
+        if self.get_object().creator is None:
+            # If WordSet instance has no creator, respond with 403 error even if user not logged in
+            self.raise_exception = True
+        return super(WordSetDelete, self).dispatch(request, *args, **kwargs)
 
 
 class WordSetListView(generic.ListView):
     model = WordSet
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, *args, **kwargs):
         context = super(WordSetListView, self).get_context_data()
         context['navbar_wordsets'] = 'active'
         return context

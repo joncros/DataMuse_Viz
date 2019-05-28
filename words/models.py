@@ -37,8 +37,27 @@ def default_language():
     return lang.pk
 
 
+class WordQuerySet(models.query.QuerySet):
+    """Custom QuerySet converts name value to lowercase before searching.
+
+    A search for an object with name='The' would return the object with name='the'."""
+    def get(self, **kwargs):
+        if kwargs['name']:
+            kwargs['name'] = kwargs['name'].lower()
+        return super().get(**kwargs)
+
+
+class WordManager(models.Manager.from_queryset(WordQuerySet)):
+    # use WordQuerySet for the manager
+    pass
+
+
 class Word(models.Model):
     """Model representing a word and its relationships to other words."""
+
+    # Custom manager that converts name to lowercase before searching for the instance
+    objects = WordManager()
+
     name = models.CharField(max_length=100)
     parts_of_speech = models.ManyToManyField('PartOfSpeech', blank=True)
     language = models.ForeignKey('Language', blank=False, default=default_language, on_delete=models.PROTECT)

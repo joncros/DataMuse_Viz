@@ -1,9 +1,9 @@
 import logging
-
+import reimport magic
 from django import forms
-from django.forms import Textarea
+from django.core.exceptions import ValidationErrorfrom django.forms import Textarea
 from django.utils.translation import ugettext_lazy as _
-
+from string import punctuation
 from words.models import Word, WordSet
 
 # Get an instance of a logger
@@ -42,13 +42,12 @@ class WordCharField(forms.CharField):
             return value.split('\r\n')
 
 
-class WordSetCreateForm(forms.ModelForm):
+class WordFileField(forms.FileField):    """File field that accepts text files and splits the text at whitespace, returning an array of strings    Detects and removes punctuation so that, for example, prose works can be uploaded to form a set of words."""    def to_python(self, data):        result = []        if data:            # confirm that file is plain text, raise error if it is not            m = magic.Magic(magic_file=r"words\static\magic.mgc", mime=True)            file_type = m.from_buffer(data.read())            if file_type != "text/plain":                raise ValidationError("Uploaded file is not a plain text file.")            # string to match either '--' or any whitespace surrounded by zero or more punctuation characters            pattern_string = "[" + re.escape(punctuation) + "]*" "\\-\\-" "[" + re.escape(punctuation) + "]*" \                             "|" \                             "[" + re.escape(punctuation) + "]*" "\\s" "[" + re.escape(punctuation) + "]*"            # regex pattern for above string            pattern = re.compile(pattern_string)            for chunk in data.chunks():                # split file into individual words, discarding whitespace and punctuation at either end of a word                array = pattern.split(chunk.decode())                # add items in array to result                result.extend(array)            # remove any punctuation from the end of the last item in result            pattern = "[" + re.escape(punctuation) + "]*\\Z"            result[-1] = re.sub(pattern, '', result[-1])        return resultclass WordSetCreateForm(forms.ModelForm):
     """Form to create a WordSet"""
 
     # Field allows user to type one word or phrase (to be added to the new WordSet) per line in the Textarea
-    words = WordCharField(strip=False, help_text="Type the words to include in the set (one word or phrase per line)")
-
-    class Meta:
+    words = WordCharField(strip=False, required=False,                          help_text="(Optional) Type the words to include in the set (one word or phrase per line)")
+    # Field allows user to upload a text file containing words to include in the set    text_file = WordFileField(required=False,                                   help_text="(Optional) Upload a text file containing words (multiple words per line) "                                             "to include in the set. The text is split into individual words (no "                                             "phrases will be detected).")    class Meta:
         model = WordSet
         fields = ['name', 'description', 'creator']
 
@@ -70,7 +69,7 @@ class WordSetCreateForm(forms.ModelForm):
             word_instance = Word.objects.get_or_create(name=word)[0]
             self.instance.words.add(word_instance)
 
-        if commit:
+        # get or create Words from uploaded text file        for word in self.cleaned_data['text_file']:            # instance is the first item in the tuple returned by get_or_create            word_instance = Word.objects.get_or_create(name=word)[0]            self.instance.words.add(word_instance)        if commit:
             instance.save()
         return instance
 

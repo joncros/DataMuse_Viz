@@ -102,3 +102,6 @@ This site makes use of DataMuse to provide visualizations illustrating data abou
  <li><strong>Word Relationships:</strong> For a given query word, a [char type?] chart that shows words related to that 
  word in one of the ways outlined above, such as synonyms or frequent followers.</li>
  </ul>
+ 
+ # todo add required packages
+ # todo note on additional files needed for python-magic

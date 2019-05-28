@@ -18,7 +18,7 @@ class WordSetCreateFormTest(TestCase):
 
     def test_words_field_help_text(self):
         form = WordSetCreateForm()
-        text = "Type the words to include in the set (one word or phrase per line)"
+        text = "(Optional) Type the words to include in the set (one word or phrase per line)"
         self.assertEqual(text, form.fields['words'].help_text)
 
     def test_words_field(self):

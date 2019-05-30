@@ -37,8 +37,6 @@ class WordFileField(forms.FileField):    """File field that accepts text files 
         widgets = {'creator': forms.HiddenInput()}
 
     def save(self, commit=True):
-        # todo run DataMuse query for each word from words field
-
         logger.debug('WordSetCreateForm save')
 
         # do initial save of new wordset
@@ -47,11 +45,9 @@ class WordFileField(forms.FileField):    """File field that accepts text files 
         # get or create Words from 'words' field, add to instance field "words"
         for word in self.cleaned_data['words']:
             logger.debug(f'word from Textarea: {word}')
-            # instance is the first item in the tuple returned by get_or_create
-            word_instance = Word.objects.get_or_create(name=word)[0]
-            self.instance.words.add(word_instance)
+            word_instance = datamuse_json.add_or_update_word(word)            self.instance.words.add(word_instance)
 
-        # get or create Words from uploaded text file        for word in self.cleaned_data['text_file']:            # instance is the first item in the tuple returned by get_or_create            word_instance = Word.objects.get_or_create(name=word)[0]            self.instance.words.add(word_instance)        if commit:
+        # get or create Words from uploaded text file        for word in self.cleaned_data['text_file']:            word_instance = datamuse_json.add_or_update_word(word)            self.instance.words.add(word_instance)        if commit:
             instance.save()
         return instance
 
@@ -92,4 +88,3 @@ class WordForm(forms.ModelForm):
     #         #if WordSet:
     #             #self.fields['word_set'] = WordSet.objects.filter(creator=self.user)
     #         pass
-

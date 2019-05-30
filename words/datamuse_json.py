@@ -57,6 +57,9 @@ def decode_word(dct):
     else:
         word = Word.objects.get_or_create(name=dct['word'])[0]
 
+        # update word to indicate successful DataMuse query
+        word.datamuse_success = True
+
         # process dct['tags'], which is a dictionary that can contain frequency and part(s) of speech
         tags = dct['tags']
         for tag in tags:
@@ -77,6 +80,11 @@ def decode_word(dct):
 
 def add_or_update_word(word: str):
     """Query DataMuse for the parts_of_speech, frequency and definitions of a Word"""
+    if Word.objects.filter(name=word).exists() and Word.objects.get(name=word).datamuse_success is True:
+        # word already in database and Datamuse call already successfully performed. Skip DataMuse query
+        logger.debug(f'{word} values already populated from DataMuse')
+        return Word.objects.get(name=word)
+
     # do api query, give up after 5 attempts
     result = query_with_retry(5, 1.0, sp=word, md='dpf', max=1)
 
@@ -105,6 +113,13 @@ def add_related(word: str, code: str):
         # todo disallow special characters at either end of string word
         # todo determine what (if anything) to return from this function
         code_param = "rel_" + code  # parameter used by python-datamuse
+
+        word_instance = Word.objects.get_or_create(name=word)[0]
+        if getattr(word_instance, code).exists():
+            # related words for this relation code have already been retrieved from DataMuse
+            logger.debug(f'related words for word {word} and code {code} already retrieved, skipping DataMuse query')
+            pass
+
         kwargs = {
             code_param: word,
             "md": "dpf"
@@ -112,9 +127,6 @@ def add_related(word: str, code: str):
         result = query_with_retry(5, 1.0, **kwargs)
 
         if result:
-            # get Word instance corresponding to word
-            word_instance = Word.objects.get_or_create(name=word)[0]
-
             # get appropriate field of word_instance to add related words to
             word_attr = getattr(word_instance, code)
 

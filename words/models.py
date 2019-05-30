@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models import BooleanField
 from django.urls import reverse
 
 
@@ -67,6 +68,10 @@ class Word(models.Model):
 
     # JSON returned from DataMuse containing one or more strings defining the word
     definitions = JSONField(null=True, blank=True)
+
+    # flag indicates if DataMuse was successfully queried to fill parts_of_speech, frequency and definitions fields
+    # purpose is to avoid redundant DataMuse queries
+    datamuse_success = BooleanField(default=False)
 
     # Remaining fields hold words related to this word.
     # Field names derived from three-letter codes used by rel_[code] DataMuse parameter

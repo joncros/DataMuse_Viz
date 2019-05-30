@@ -26,7 +26,7 @@ relation_codes = [
     'cns',
 ]
 
-possible_parts_of_speech = ['n', 'v', 'adj', 'adv']
+possible_parts_of_speech = [choice[0] for choice in PartOfSpeech.part_choices]
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)

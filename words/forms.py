@@ -4,30 +4,12 @@ from django import forms
 from django.core.exceptions import ValidationErrorfrom django.forms import Textarea
 from django.utils.translation import ugettext_lazy as _
 from string import punctuation
-from words.models import Word, WordSet
+from words import datamuse_jsonfrom words.models import Word, WordSet
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
-# tuple holding word relationship types
-relations = (
-    ('jja', Word._meta.get_field('jja').verbose_name),
-    ('jjb', Word._meta.get_field('jjb').verbose_name),
-    ('syn', Word._meta.get_field('syn').verbose_name),
-    ('trg', Word._meta.get_field('trg').verbose_name),
-    ('ant', Word._meta.get_field('ant').verbose_name),
-    ('spc', Word._meta.get_field('spc').verbose_name),
-    ('gen', Word._meta.get_field('gen').verbose_name),
-    ('com', Word._meta.get_field('com').verbose_name),
-    ('par', Word._meta.get_field('par').verbose_name),
-    ('bga', Word._meta.get_field('bga').verbose_name),
-    ('bgb', Word._meta.get_field('bgb').verbose_name),
-    ('rhy', Word._meta.get_field('rhy').verbose_name),
-    ('nry', Word._meta.get_field('nry').verbose_name),
-    ('hom', Word._meta.get_field('hom').verbose_name),
-    ('cns', Word._meta.get_field('cns').verbose_name),
-)
-
+# tuple holding word relationship codes and their verbose namesrelations = tuple(    (relation_code, Word._meta.get_field(relation_code).verbose_name) for relation_code in datamuse_json.relation_codes)
 
 class WordCharField(forms.CharField):
     """Custom CharField that treats each line from the Widget as a separate string and returns a list"""
@@ -39,7 +21,7 @@ class WordCharField(forms.CharField):
             return []
         else:
             # an HTML line break in an input fields is CR LF
-            return value.split('\r\n')
+            # todo split punctuation from beginning and end of each word? at least strip " and '            return value.split('\r\n')
 
 
 class WordFileField(forms.FileField):    """File field that accepts text files and splits the text at whitespace, returning an array of strings    Detects and removes punctuation so that, for example, prose works can be uploaded to form a set of words."""    def to_python(self, data):        result = []        if data:            # confirm that file is plain text, raise error if it is not            m = magic.Magic(magic_file=r"words\static\magic.mgc", mime=True)            file_type = m.from_buffer(data.read())            if file_type != "text/plain":                raise ValidationError("Uploaded file is not a plain text file.")            # string to match either '--' or any whitespace surrounded by zero or more punctuation characters            pattern_string = "[" + re.escape(punctuation) + "]*" "\\-\\-" "[" + re.escape(punctuation) + "]*" \                             "|" \                             "[" + re.escape(punctuation) + "]*" "\\s" "[" + re.escape(punctuation) + "]*"            # regex pattern for above string            pattern = re.compile(pattern_string)            for chunk in data.chunks():                # split file into individual words, discarding whitespace and punctuation at either end of a word                array = pattern.split(chunk.decode())                # add items in array to result                result.extend(array)            # remove any punctuation from the end of the last item in result            pattern = "[" + re.escape(punctuation) + "]*\\Z"            result[-1] = re.sub(pattern, '', result[-1])        return resultclass WordSetCreateForm(forms.ModelForm):
@@ -110,5 +92,4 @@ class WordForm(forms.ModelForm):
     #         #if WordSet:
     #             #self.fields['word_set'] = WordSet.objects.filter(creator=self.user)
     #         pass
-
 

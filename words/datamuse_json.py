@@ -44,16 +44,16 @@ def query_with_retry(retries: int, wait: float, **kwargs):
             result = api.words(**kwargs)
             return result
         except ValueError:
-            logger.info(ValueError)
             logger.info('DataMuse query failed.')
             time.sleep(wait)
+    # no response after retries exhausted
+    raise ConnectionError('DataMuse service unavailable')
 
 
 def decode_word(dct):
     """Decodes a json response corresponding to a single word to get a Word object"""
-    if dct == []:
-        # raise error or log?
-        pass
+    if not dct:
+        raise ValueError("Invalid parameter: empty json")
     else:
         word = Word.objects.get_or_create(name=dct['word'])[0]
 
@@ -65,7 +65,6 @@ def decode_word(dct):
         for tag in tags:
             if tag in possible_parts_of_speech:
                 part = PartOfSpeech.objects.get_or_create(name=tag)[0]
-                logger.debug(part)
                 word.parts_of_speech.add(part)
             elif tag[:2] == 'f:':
                 word.frequency = float(tag[2:])
@@ -80,24 +79,36 @@ def decode_word(dct):
 
 def add_or_update_word(word: str):
     """Query DataMuse for the parts_of_speech, frequency and definitions of a Word"""
+    if not word or word.isspace():
+        # exit early if word is empty or only whitespace
+        return None
+
+    word = word.lower()
+
     if Word.objects.filter(name=word).exists() and Word.objects.get(name=word).datamuse_success is True:
         # word already in database and Datamuse call already successfully performed. Skip DataMuse query
         logger.debug(f'{word} values already populated from DataMuse')
         return Word.objects.get(name=word)
 
     # do api query, give up after 5 attempts
-    result = query_with_retry(5, 1.0, sp=word, md='dpf', max=1)
+    try:
+        result = query_with_retry(5, 1.0, sp=word, md='dpf', max=1)
+    except ConnectionError:
+        logger.exception(ConnectionError)
+        return None
 
     # check if result is not empty and the entry is a word that exactly matches the parameter
     if result and result[0]['word'] == word:
         # convert result to string that json.loads can read
-        result = json.dumps(result)
-        logger.debug(result)
+        # result is a list (of size one because api parameter max=1) of json objects holding data concerning the word
+        result = json.dumps(result[0])
+        logger.debug(f'json from Datamuse: {result}')
 
-        # use decode_word to fill in word fields
-        return json.loads(result, object_hook=decode_word)[0]
+        # use decode_word to fill in word fields, return the Word object
+        return json.loads(result, object_hook=decode_word)
     else:
-        logger.info("{word} not found by DataMuse, or DataMuse service unavailable")
+        logger.info(f'json from Datamuse: {result}')
+        logger.info(f'{word} not found by DataMuse')
 
 
 def add_related(word: str, code: str):
@@ -106,8 +117,7 @@ def add_related(word: str, code: str):
      The relationship type used is determined by the argument code, which should be one of the strings
      in the list relation_codes"""
     if code not in relation_codes:
-        # log error (or raise exception?) and exit
-        pass
+        raise ValueError(f'{code} is not a valid related word code.')
     else:
         # construct string for function call using word and code and use eval() to run it
         # todo disallow special characters at either end of string word
@@ -118,13 +128,17 @@ def add_related(word: str, code: str):
         if getattr(word_instance, code).exists():
             # related words for this relation code have already been retrieved from DataMuse
             logger.debug(f'related words for word {word} and code {code} already retrieved, skipping DataMuse query')
-            pass
+            return None
 
         kwargs = {
             code_param: word,
             "md": "dpf"
         }
-        result = query_with_retry(5, 1.0, **kwargs)
+        try:
+            result = query_with_retry(5, 1.0, **kwargs)
+        except ConnectionError:
+            logger.exception(ConnectionError)
+            return None
 
         if result:
             # get appropriate field of word_instance to add related words to
@@ -141,6 +155,7 @@ def add_related(word: str, code: str):
                 # add this Word to the appropriate field of word_instance
                 word_attr.add(related_word)
         else:
-            logger.info("DataMuse service unavailable.")
+            logger.info(f'{word} not recognized by DataMuse')
+            # todo raise error to propagate to form?
 
 

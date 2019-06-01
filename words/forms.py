@@ -43,11 +43,10 @@ class WordFileField(forms.FileField):    """File field that accepts text files 
         instance = super(WordSetCreateForm, self).save(commit=commit)
 
         # get or create Words from 'words' field, add to instance field "words"
-        for word in self.cleaned_data['words']:
+        added_words = set()  # set to hold words already added to the wordset        for word in self.cleaned_data['words']:
             logger.debug(f'word from Textarea: {word}')
-            word_instance = datamuse_json.add_or_update_word(word)            self.instance.words.add(word_instance)
-
-        # get or create Words from uploaded text file        for word in self.cleaned_data['text_file']:            word_instance = datamuse_json.add_or_update_word(word)            self.instance.words.add(word_instance)        if commit:
+            if word not in added_words:  # skipped if word occurred earlier in cleaned_data['words']                added_words.add(word)                word_instance = datamuse_json.add_or_update_word(word)                if word_instance:                    self.instance.words.add(word_instance)
+        # get or create Words from uploaded text file        for word in self.cleaned_data['text_file']:            if word not in added_words:  # skipped if word occurred earlier in 'words' or 'text_file'                added_words.add(word)                word_instance = datamuse_json.add_or_update_word(word)                if word_instance:                    self.instance.words.add(word_instance)        if commit:
             instance.save()
         return instance
 

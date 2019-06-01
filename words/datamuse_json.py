@@ -98,7 +98,7 @@ def add_or_update_word(word: str):
         return None
 
     # check if result is not empty and the entry is a word that exactly matches the parameter
-    if result and result[0]['word'] == word:
+    if result and result[0]['word'] == word:  # todo match plural? match same word with '-' in middle?
         # convert result to string that json.loads can read
         # result is a list (of size one because api parameter max=1) of json objects holding data concerning the word
         result = json.dumps(result[0])

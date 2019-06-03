@@ -1,16 +1,18 @@
+import json
 import logging
 
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.mixins import UserPassesTestMixin, AccessMixin
 from django.core.exceptions import ImproperlyConfigured
+from django.core.serializers.json import DjangoJSONEncoder
 from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views import generic
 from django.views.generic.base import ContextMixin
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 
-from words.forms import WordForm, WordSetCreateForm
+from words.forms import WordForm, WordSetCreateForm, WordSetChoice
 from words.models import WordSet
 
 # Get an instance of a logger
@@ -24,6 +26,48 @@ def index(request):
                }
 
     return render(request, 'words/index.html', context)
+
+
+def visualization_frequency(request):
+    """View for displaying a bubble chart of the frequencies of words in a WordSet"""
+
+    context = {
+        'viz_title': 'Word Frequencies',  # Visualization title to use in page title
+        'navbar_visualization_frequency': 'active',  # make "Word Frequencies Visualization" active in the navbar
+    }
+
+    if request.method == 'POST':
+        form = WordSetChoice(request.POST)
+
+        if form.is_valid():
+            set_instance = form.cleaned_data['word_set']
+            logger.debug(set_instance.name)
+            queryset = set_instance.words.all()
+
+            # apply limits on word frequency (if any)
+            if form.cleaned_data['frequency_gt']:
+                queryset = queryset.filter(frequency__gt=form.cleaned_data['frequency_gt'])
+            if form.cleaned_data['frequency_lt']:
+                queryset = set_instance.words.filter(frequency__lt=form.cleaned_data['frequency_lt'])
+
+            json_list = [
+                {
+                    "name": word.name,
+                    "title": f'{word.name}',
+                    "group": set_instance.name,
+                    "value": word.frequency
+                }
+                for word in queryset]
+            context['wordcount'] = len(json_list)
+            wordset_data = json.dumps(json_list, cls=DjangoJSONEncoder)
+            context['json_list'] = json_list
+            context['wordset_data'] = wordset_data
+    else:
+        form = WordSetChoice()
+
+    context['form'] = form
+
+    return render(request, 'words/visualization_frequency.html', context)
 
 
 def get_relation_viz(request):

@@ -22,11 +22,8 @@
                     <li class="{{ navbar_index }}"><a href="{% url 'index' %}">Home</a></li>
                     <li class="{{ navbar_wordset_create }}"><a href="{% url 'wordset_create' %}">Create Word Set</a></li>
                     <li class="{{ navbar_wordsets }}"><a href="{% url 'wordsets' %}">Word Sets</a></li>
+                    <li class="{{ navbar_visualization_frequency }}"><a href="{% url 'viz frequency' %}">Word Frequencies Visualization</a></li>
                     <li class="{{ navbar_relation_viz }}"><a href="{% url 'relations viz' %}">Word Relationships Visualization</a></li>
-                    {% comment %}
-                    <li><a href="{% url 'viz test' %}">Visualization Test</a></li>
-                    <li><a href="#">Page 3</a></li>
-                    {% endcomment %}
                 </ul>
 
                 <ul class="nav navbar-nav navbar-right">

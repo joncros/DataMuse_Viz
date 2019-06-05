@@ -42,6 +42,37 @@ class WordTest(TestCase):
         with self.assertRaises(IntegrityError):
             Language.objects.get(name="en").delete()
 
+    def test_relation_fields_not_symmetrical(self):
+        """Tests all fields holding words related to the Word to ensure symmetrical attribute is false"""
+        relation_field_names = [
+            'jja',
+            'jjb',
+            'syn',
+            'trg',
+            'ant',
+            'spc',
+            'gen',
+            'com',
+            'par',
+            'bga',
+            'bgb',
+            'rhy',
+            'nry',
+            'hom',
+            'cns',
+        ]
+
+        word1 = Word.objects.create(name="dog")
+        word2 = Word.objects.create(name="canine")
+        for name in relation_field_names:
+            # add word2 to the field in word1
+            word1_field = getattr(word1, name)
+            word1_field.add(word2)
+
+            # get same field in word2, fail if it contains word1
+            word2_field = getattr(word2, name)
+            self.assertFalse(word2_field.filter(name="dog").exists(), msg=f'field {name} not symmetrical')
+
 
 class LanguageTest(TestCase):
     @classmethod
@@ -110,4 +141,3 @@ class WordSetTest(TestCase):
         pk = word_set.id
         expected_url = f'/words/wordset/{pk}'
         self.assertEqual(word_set.get_absolute_url(), expected_url)
-

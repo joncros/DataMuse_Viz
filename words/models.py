@@ -75,20 +75,22 @@ class Word(models.Model):
 
     # Remaining fields hold words related to this word.
     # Field names derived from three-letter codes used by rel_[code] DataMuse parameter
-    # todo all related word fields should have symmetrical=False so datamuse_json will not skip add_related until called once for a word
+    # datamuse_json skips a related word DataMuse query if the field is populated, so these fields cannot be symmetrical
+    # (if DataMuse called to find synonyms for "dog", the syn field would hold "canine"; but the syn field for "canine"
+    # should not contain "dog" until a DataMuse query is performed to find synonyms for "canine")
     jja = models.ManyToManyField('self', blank=True, verbose_name='popular related noun', symmetrical=False,
                                  related_name='related_by_jja')
     jjb = models.ManyToManyField('self', blank=True, verbose_name='popular related adjective', symmetrical=False,
                                  related_name='related_by_jjb')
-    syn = models.ManyToManyField('self', blank=True, verbose_name='synonym', related_name='synonyms',
+    syn = models.ManyToManyField('self', blank=True, verbose_name='synonym', symmetrical=False, related_name='synonyms',
                                  related_query_name='synonym')
 
     # Words that are statistically associated with this word in the same piece of text
     trg = models.ManyToManyField('self', blank=True, verbose_name='triggers', symmetrical=False,
                                  related_name='words_is_trigger_for', related_query_name='is_trigger_for')
 
-    ant = models.ManyToManyField('self', blank=True, verbose_name='antonyms', related_name='antonyms',
-                                 related_query_name='antonym')
+    ant = models.ManyToManyField('self', blank=True, verbose_name='antonyms', symmetrical=False,
+                                 related_name='antonyms', related_query_name='antonym')
     spc = models.ManyToManyField('self', blank=True, verbose_name='direct hypernyms', symmetrical=False,
                                  help_text='words with a similar, but broader meaning '
                                            '(i.e. boat is a hypernym of gondola)',
@@ -113,14 +115,17 @@ class Word(models.Model):
                                  help_text='words that frequently precede this'
                                            '(i.e. havoc preceding wreak',
                                  related_name='frequently_precedes')
-    rhy = models.ManyToManyField('self', blank=True, verbose_name='rhymes', help_text='perfect rhymes',
-                                 related_name='rhymes', related_query_name='rhyme')
-    nry = models.ManyToManyField('self', blank=True, verbose_name='near rhymes', help_text='approximate rhymes',
+    rhy = models.ManyToManyField('self', blank=True, verbose_name='rhymes', symmetrical=False,
+                                 help_text='perfect rhymes', related_name='rhymes', related_query_name='rhyme')
+    nry = models.ManyToManyField('self', blank=True, verbose_name='near rhymes', symmetrical=False,
+                                 help_text='approximate rhymes',
                                  related_name='near_rhymes', related_query_name='near_rhyme')
-    hom = models.ManyToManyField('self', blank=True, verbose_name='homophones', help_text='sound-alike words',
+    hom = models.ManyToManyField('self', blank=True, verbose_name='homophones', symmetrical=False,
+                                 help_text='sound-alike words',
                                  related_name='homophones', related_query_name='homophone')
-    cns = models.ManyToManyField('self', blank=True, verbose_name='consonant matches', help_text='i.e. sample and simple',
-                                 related_name='consonant_matches', related_query_name='consonant_match')
+    cns = models.ManyToManyField('self', blank=True, verbose_name='consonant matches', symmetrical=False,
+                                 help_text='i.e. sample and simple', related_name='consonant_matches',
+                                 related_query_name='consonant_match')
 
     class Meta:
         # for each language, there should be only one word with a certain name

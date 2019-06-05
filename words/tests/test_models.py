@@ -29,9 +29,18 @@ class WordTest(TestCase):
         expected_object_name = 'walkabout'
         self.assertEqual(word.name, expected_object_name)
 
+    def test_object_search_ignores_case(self):
+        word1 = Word.objects.get(name="APple")
+        word2 = Word.objects.get(name="apple")
+        self.assertEqual(word1, word2)
+
     def test_word_create_with_duplicate_name(self):
         with self.assertRaises(IntegrityError):
             Word.objects.create(name="apple")
+
+    def test_language_deletion_prevented_if_words_in_language_exist(self):
+        with self.assertRaises(IntegrityError):
+            Language.objects.get(name="en").delete()
 
 
 class LanguageTest(TestCase):
@@ -40,11 +49,20 @@ class LanguageTest(TestCase):
         # Set up non-modified objects used by all test methods
         # Language.objects.create()
         Word.objects.create(name="apple")
+        Language.objects.create(name="es")
 
     def test_object_string_is_verbose(self):
         lang = Word.objects.get(name='apple').language
         expected_object_string = "English"
         self.assertEqual(expected_object_string, str(lang))
+
+    def test_language_pk_is_unique(self):
+        """Tests that there is only ever one instance per language string"""
+        Word.objects.create(name="orange")
+        Word.objects.create(name="hasta", language=Language("es"))
+        self.assertEqual(Language.objects.count(), 2)
+        with self.assertRaises(IntegrityError):
+            Language.objects.create(name="es")
 
 
 class PartOfSpeechTest(TestCase):
@@ -53,10 +71,15 @@ class PartOfSpeechTest(TestCase):
         # Set up non-modified objects used by all test methods
         PartOfSpeech.objects.create(name="adj")
 
-    def test_object_name(self):
+    def test_object_string(self):
         part = PartOfSpeech.objects.get(name="adj")
         expected_object_name = "adjective"
         self.assertEqual(expected_object_name, str(part))
+
+    def test_object_pk_unique(self):
+        """Test there can never be more than one instance of a PartOfSpeech with a given name"""
+        with self.assertRaises(IntegrityError):
+            PartOfSpeech.objects.create(name="adj")
 
 
 class WordSetTest(TestCase):
@@ -68,17 +91,23 @@ class WordSetTest(TestCase):
         WordSet.objects.create(name="Test Set 2")
 
     def test_object_name(self):
-        set = WordSet.objects.get(name="Test Set 1")
+        word_set = WordSet.objects.get(name="Test Set 1")
         expected_object_name = "Test Set 1 (created by testuser)"
-        self.assertEqual(expected_object_name, str(set))
+        self.assertEqual(expected_object_name, str(word_set))
 
     def test_object_name_with_no_creator(self):
-        set = WordSet.objects.get(name="Test Set 2")
-        expected_object_name = f'Test Set 2 ({set.id})'
-        self.assertEqual(expected_object_name, str(set))
+        word_set = WordSet.objects.get(name="Test Set 2")
+        expected_object_name = f'Test Set 2 ({word_set.id})'
+        self.assertEqual(expected_object_name, str(word_set))
 
     def test_unique_wordset_name_per_creator(self):
         test_user = User.objects.get(username='testuser')
         with self.assertRaises(IntegrityError):
             WordSet.objects.create(name="Test Set 1", creator=test_user, description="one")
+
+    def test_absolute_url(self):
+        word_set = WordSet.objects.get(name="Test Set 1")
+        pk = word_set.id
+        expected_url = f'/words/wordset/{pk}'
+        self.assertEqual(word_set.get_absolute_url(), expected_url)
 

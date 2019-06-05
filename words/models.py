@@ -75,6 +75,7 @@ class Word(models.Model):
 
     # Remaining fields hold words related to this word.
     # Field names derived from three-letter codes used by rel_[code] DataMuse parameter
+    # todo all related word fields should have symmetrical=False so datamuse_json will not skip add_related until called once for a word
     jja = models.ManyToManyField('self', blank=True, verbose_name='popular related noun', symmetrical=False,
                                  related_name='related_by_jja')
     jjb = models.ManyToManyField('self', blank=True, verbose_name='popular related adjective', symmetrical=False,

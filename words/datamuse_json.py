@@ -78,7 +78,9 @@ def decode_word(dct):
 
 
 def add_or_update_word(word: str):
-    """Query DataMuse for the parts_of_speech, frequency and definitions of a Word"""
+    """Query DataMuse for the parts_of_speech, frequency and definitions of a Word
+
+    Returns the corresponding Word instance, or None if the query was unsuccessful"""
     if not word or word.isspace():
         # exit early if word is empty or only whitespace
         return None
@@ -93,8 +95,8 @@ def add_or_update_word(word: str):
     # do api query, give up after 5 attempts
     try:
         result = query_with_retry(5, 1.0, sp=word, md='dpf', max=1)
-    except ConnectionError:
-        logger.exception(ConnectionError)
+    except ConnectionError as e:
+        logger.error(e)
         return None
 
     # check if result is not empty and the entry is a word that exactly matches the parameter

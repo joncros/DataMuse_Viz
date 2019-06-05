@@ -58,9 +58,10 @@ def visualization_frequency(request):
                     "value": word.frequency
                 }
                 for word in queryset]
-            context['wordcount'] = len(json_list)
+            context['wordcount'] = len(json_list)  # number of words in visualization
+
+            # json formatted for Observable bubble chart
             wordset_data = json.dumps(json_list, cls=DjangoJSONEncoder)
-            context['json_list'] = json_list
             context['wordset_data'] = wordset_data
     else:
         form = WordSetChoice()
@@ -148,6 +149,8 @@ class WordSetDelete(UserPassesTestMixin, DeleteView):
 
 class WordSetListView(generic.ListView):
     model = WordSet
+
+    # todo add word count to template?
 
     def get_context_data(self, *args, **kwargs):
         context = super(WordSetListView, self).get_context_data()

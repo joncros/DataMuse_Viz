@@ -4,7 +4,9 @@ from django.contrib.auth.models import User
 from django.test import TestCase, SimpleTestCase
 from django.urls import reverse
 
-from words.models import WordSet
+from words.models import WordSet, Word
+
+logger = logging.getLogger(__name__)
 
 
 class IndexTest(SimpleTestCase):
@@ -106,7 +108,8 @@ class WordSetDetailViewTest(TestCase):
     def test_if_wordset_creator_none_delete_link_not_present(self):
         wordset = WordSet.objects.get(name="test2")
         response = self.client.get(reverse('wordset-detail', args=[wordset.pk]))
-        self.assertNotContains(response, f'<a href="/words/wordset/{wordset.pk}/delete/">Delete Word Set</a>', html=True)
+        self.assertNotContains(response, f'<a href="/words/wordset/{wordset.pk}/delete/">Delete Word Set</a>',
+                               html=True)
 
     def test_if_wordset_creator_not_logged_in_delete_link_not_present(self):
         """Login a user other than the word set creator and assert delete link not present"""
@@ -114,7 +117,8 @@ class WordSetDetailViewTest(TestCase):
         test_user = User.objects.create_user(username='testuser2', password='qq<ISRUkw+tuK')
         login = self.client.login(username='testuser2', password='qq<ISRUkw+tuK')
         response = self.client.get(reverse('wordset-detail', args=[wordset.pk]))
-        self.assertNotContains(response, f'<a href="/words/wordset/{wordset.pk}/delete/">Delete Word Set</a>', html=True)
+        self.assertNotContains(response, f'<a href="/words/wordset/{wordset.pk}/delete/">Delete Word Set</a>',
+                               html=True)
 
     def test_if_wordset_creator_logged_in_delete_link_present(self):
         wordset = WordSet.objects.get(name="test1")
@@ -211,5 +215,52 @@ class GetRelationVizTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['viz_title'], 'Word Relationships')
 
+
+class VisualizationFrequencyTest(TestCase):
+    def test_view_url_exists_at_desired_location(self):
+        response = self.client.get('/words/frequencies/')
+        self.assertEqual(response.status_code, 200)
+
+    def test_view_url_accessible_by_name(self):
+        response = self.client.get(reverse('viz frequency'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_view_uses_correct_template(self):
+        response = self.client.get(reverse('viz frequency'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'words/visualization_frequency.html')
+
+    def test_navbar_context_item(self):
+        """Tests that an item exists in view context that sets the page to active in the navbar"""
+        response = self.client.get(reverse('viz frequency'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['navbar_visualization_frequency'], 'active')
+
+    def test_visualization_title_test(self):
+        """Tests that the correct visualization title is passed in the context"""
+        response = self.client.get(reverse('viz frequency'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['viz_title'], 'Word Frequencies')
+
+    # tests for POST
+
+    def test_wordset_data_in_post(self):
+        """Tests when POST used with a WordSet, context contains 'wordset_data', json formatted for the bubble chart"""
+        # create a WordSet to use
+        word_set = WordSet.objects.create(name='test')
+        word_set.words.add(Word.objects.create(name="and")),
+        word_set.words.add(Word.objects.create(name="for"))
+        word_set.words.add(Word.objects.create(name="bike"))
+        postData = {'word_set': word_set.id}
+        response = self.client.post('/words/frequencies/', data=postData)
+        data_item_pattern = "{" \
+                            "'name': '\\s*'," \
+                            "'title': '\\s*'," \
+                            "'group': 'test'," \
+                            "'value': \\d*\\.\\d*" \
+                            "}"
+        pattern = "[" + data_item_pattern + "," + data_item_pattern + "," + data_item_pattern + "]"
+        wordset_data = response.context['wordset_data']
+        self.assertRegex(wordset_data, pattern)
 
     # todo test viz description included in context

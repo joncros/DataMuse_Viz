@@ -12,7 +12,7 @@ from django.views import generic
 from django.views.generic.base import ContextMixin
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 
-from words.forms import WordForm, WordSetCreateForm, WordSetChoice
+from words.forms import RelatedWordsForm, WordSetCreateForm, WordSetChoice
 from words.models import WordSet
 
 # Get an instance of a logger
@@ -71,7 +71,7 @@ def visualization_frequency(request):
     return render(request, 'words/visualization_frequency.html', context)
 
 
-def get_relation_viz(request):
+def visualization_related_words(request):
     """View for the word relationship visualization"""
     # todo refactor into class-based visualization view that I can subclass?
 
@@ -79,19 +79,19 @@ def get_relation_viz(request):
 
     if request.method == 'POST':
         # create form instances and populate them with data from the request:
-        word_form = WordForm(request.POST)
+        form = RelatedWordsForm(request.POST)
 
     # if a GET (or any other method) create a blank form
     else:
-        word_form = WordForm()
+        form = RelatedWordsForm()
 
     context = {
         'viz_title': 'Word Relationships',  # Visualization title to use in page title
-        'navbar_relation_viz': 'active',  # make "Word Relationships Visualization" the active item in the navbar
-        'word_form': word_form,
+        'navbar_related_words': 'active',  # make "Word Relationships Visualization" the active item in the navbar
+        'form': form,
     }
 
-    return render(request, 'words/word_relationships.html', context)
+    return render(request, 'words/related_words.html', context)
 
 
 # todo view for page visualizing the frequency (google nwords) of words in a set (bubble chart)

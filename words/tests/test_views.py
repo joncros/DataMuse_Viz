@@ -187,31 +187,31 @@ class WordSetListViewTest(TestCase):
         self.assertEqual(response.context['navbar_wordsets'], 'active')
 
 
-class GetRelationVizTest(TestCase):
-    """Tests get_relation_viz view."""
+class VisualizationRelatedWordsTest(TestCase):
+    """Tests visualization_related_words view."""
 
     def test_view_url_exists_at_desired_location(self):
-        response = self.client.get('/words/relations/')
+        response = self.client.get('/words/related_words/')
         self.assertEqual(response.status_code, 200)
 
     def test_view_url_accessible_by_name(self):
-        response = self.client.get(reverse('relations viz'))
+        response = self.client.get(reverse('viz related words'))
         self.assertEqual(response.status_code, 200)
 
     def test_view_uses_correct_template(self):
-        response = self.client.get(reverse('relations viz'))
+        response = self.client.get(reverse('viz related words'))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'words/word_relationships.html')
+        self.assertTemplateUsed(response, 'words/related_words.html')
 
     def test_navbar_context_item(self):
         """Tests that an item exists in view context that sets the page to active in the navbar"""
-        response = self.client.get(reverse('relations viz'))
+        response = self.client.get(reverse('viz related words'))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['navbar_relation_viz'], 'active')
+        self.assertEqual(response.context['navbar_related_words'], 'active')
 
     def test_visualization_title_test(self):
         """Tests that the correct visualization title is passed in the context"""
-        response = self.client.get(reverse('relations viz'))
+        response = self.client.get(reverse('viz related words'))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['viz_title'], 'Word Relationships')
 

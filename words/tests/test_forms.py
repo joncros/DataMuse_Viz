@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile, InMemoryUploadedFile
 from django.test import TestCase
 
-from words.forms import WordForm, WordSetCreateForm, WordCharField, WordFileField, WordSetChoice
+from words.forms import RelatedWordsForm, WordSetCreateForm, WordCharField, WordFileField, WordSetChoice
 from words.models import WordSet
 
 
@@ -113,7 +113,7 @@ class WordSetCreateFormTest(TestCase):
 
 class WordFormTest(TestCase):
     def test_correct_fields_present(self):
-        form = WordForm()
+        form = RelatedWordsForm()
         self.assertIn('name', form.fields)
         self.assertIn('language', form.fields)
         self.assertIn('relation', form.fields)
@@ -121,7 +121,7 @@ class WordFormTest(TestCase):
 
     def test_word_name_field_label(self):
         """The label for the word name should be 'word'."""
-        form = WordForm()
+        form = RelatedWordsForm()
         self.assertEqual(form.fields['name'].label, 'Word')
 
 

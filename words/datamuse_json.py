@@ -148,14 +148,18 @@ def add_related(word: str, code: str):
 
             # for each in result, get_or_create Word, update fields from JSON, and add word to appropriate field of word
             for item in result:
+                # get the word's score value (it's relevance compared to other words in the query)
+                score = item['score']
+
                 # convert item to string that json.loads can read
                 item = json.dumps(item)
 
                 # get or create Word instance and update its fields from JSON
                 related_word = json.loads(item, object_hook=decode_word)
+                logger.debug(f'word: {word} code: {code} related word: {related_word.name} score: {score}')
 
                 # add this Word to the appropriate field of word_instance
-                word_attr.add(related_word)
+                word_attr.add(related_word, through_defaults={'score': score})
         else:
             logger.info(f'{word} not recognized by DataMuse')
             # todo raise error to propagate to form?

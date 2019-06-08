@@ -73,59 +73,56 @@ class Word(models.Model):
     # purpose is to avoid redundant DataMuse queries
     datamuse_success = BooleanField(default=False)
 
-    # Remaining fields hold words related to this word.
-    # Field names derived from three-letter codes used by rel_[code] DataMuse parameter
-    # datamuse_json skips a related word DataMuse query if the field is populated, so these fields cannot be symmetrical
-    # (if DataMuse called to find synonyms for "dog", the syn field would hold "canine"; but the syn field for "canine"
-    # should not contain "dog" until a DataMuse query is performed to find synonyms for "canine")
-    jja = models.ManyToManyField('self', blank=True, verbose_name='popular related noun', symmetrical=False,
-                                 related_name='related_by_jja')
-    jjb = models.ManyToManyField('self', blank=True, verbose_name='popular related adjective', symmetrical=False,
-                                 related_name='related_by_jjb')
-    syn = models.ManyToManyField('self', blank=True, verbose_name='synonym', symmetrical=False, related_name='synonyms',
-                                 related_query_name='synonym')
-
-    # Words that are statistically associated with this word in the same piece of text
-    trg = models.ManyToManyField('self', blank=True, verbose_name='triggers', symmetrical=False,
-                                 related_name='words_is_trigger_for', related_query_name='is_trigger_for')
-
-    ant = models.ManyToManyField('self', blank=True, verbose_name='antonyms', symmetrical=False,
-                                 related_name='antonyms', related_query_name='antonym')
-    spc = models.ManyToManyField('self', blank=True, verbose_name='direct hypernyms', symmetrical=False,
+    # Remaining fields hold words related to this word. The relationships are governed by the RelatedWords model class.
+    # Field names derived from three-letter codes used by rel_[code] DataMuse parameter.
+    # datamuse_json skips a related word DataMuse query if the field is already populated.
+    jja = models.ManyToManyField('self', through='JJA', blank=True, verbose_name='popular related nouns',
+                                 symmetrical=False, related_name='related_by_jja')
+    jjb = models.ManyToManyField('self', through='JJB', blank=True, verbose_name='popular related adjectives',
+                                 symmetrical=False, related_name='related_by_jjb')
+    syn = models.ManyToManyField('self', through='SYN', blank=True, verbose_name='synonyms', symmetrical=False,
+                                 related_name='related_by_syn')
+    trg = models.ManyToManyField('self', through='TRG', blank=True, verbose_name='triggers', symmetrical=False,
+                                 related_name='related_by_trg',
+                                 help_text='words that are statistically associated with this word '
+                                           'in the same piece of text')
+    ant = models.ManyToManyField('self', through='ANT', blank=True, verbose_name='antonyms', symmetrical=False,
+                                 related_name='related_by_ant')
+    spc = models.ManyToManyField('self', through='SPC', blank=True, verbose_name='direct hypernyms', symmetrical=False,
+                                 related_name='related_by_spc',
                                  help_text='words with a similar, but broader meaning '
-                                           '(i.e. boat is a hypernym of gondola)',
-                                 related_name='hyponyms', related_query_name='hyponym')
-    gen = models.ManyToManyField('self', blank=True, verbose_name='direct hyponyms', symmetrical=False,
+                                           '(i.e. boat is a hypernym of gondola)')
+    gen = models.ManyToManyField('self', through='GEN', blank=True, verbose_name='direct hyponyms', symmetrical=False,
+                                 related_name='related_by_gen',
                                  help_text='words with a similar, but more specific meaning '
-                                           '(i.e. gondola is a hyponym of boat)',
-                                 related_name='hypernyms', related_query_name='hypernym')
-    com = models.ManyToManyField('self', blank=True, verbose_name='comprises', symmetrical=False,
+                                           '(i.e. gondola is a hyponym of boat)')
+    com = models.ManyToManyField('self', through='COM', blank=True, verbose_name='comprises', symmetrical=False,
+                                 related_name='related_by_com',
                                  help_text='things which this is composed of'
-                                           '(a car has an accelerator, a steering wheel, etc.',
-                                 related_name='part_of')
-    par = models.ManyToManyField('self', blank=True, verbose_name='part of', symmetrical=False,
+                                           '(a car has an accelerator, a steering wheel, etc.')
+    par = models.ManyToManyField('self', through='PAR', blank=True, verbose_name='part of', symmetrical=False,
+                                 related_name='related_by_par',
                                  help_text='things of which this is a part of'
-                                           '(a window is a part of a car, a house, a boat, etc.)',
-                                 related_name='comprises')
-    bga = models.ManyToManyField('self', blank=True, verbose_name='frequent followers', symmetrical=False,
+                                           '(a window is a part of a car, a house, a boat, etc.)')
+    bga = models.ManyToManyField('self', through='BGA', blank=True, verbose_name='frequent followers', symmetrical=False,
+                                 related_name='related_by_bga',
                                  help_text='words that frequently follow this '
-                                           '(i.e. wreak followed by havoc',
-                                 related_name='frequently_follows')
-    bgb = models.ManyToManyField('self', blank=True, verbose_name='frequent predecessors', symmetrical=False,
+                                           '(i.e. havoc follows wreak')
+    bgb = models.ManyToManyField('self', through='BGB', blank=True, verbose_name='frequent predecessors', symmetrical=False,
+                                 related_name='related_by_bgb',
                                  help_text='words that frequently precede this'
-                                           '(i.e. havoc preceding wreak',
-                                 related_name='frequently_precedes')
-    rhy = models.ManyToManyField('self', blank=True, verbose_name='rhymes', symmetrical=False,
-                                 help_text='perfect rhymes', related_name='rhymes', related_query_name='rhyme')
-    nry = models.ManyToManyField('self', blank=True, verbose_name='near rhymes', symmetrical=False,
+                                           '(i.e. wreck precedes havoc')
+    rhy = models.ManyToManyField('self', through='RHY', blank=True, verbose_name='rhymes', symmetrical=False,
+                                 help_text='perfect rhymes', related_name='related_by_rhy')
+    nry = models.ManyToManyField('self', through='NRY', blank=True, verbose_name='near rhymes', symmetrical=False,
                                  help_text='approximate rhymes',
-                                 related_name='near_rhymes', related_query_name='near_rhyme')
-    hom = models.ManyToManyField('self', blank=True, verbose_name='homophones', symmetrical=False,
+                                 related_name='related_by_nry')
+    hom = models.ManyToManyField('self', through='HOM', blank=True, verbose_name='homophones', symmetrical=False,
                                  help_text='sound-alike words',
-                                 related_name='homophones', related_query_name='homophone')
-    cns = models.ManyToManyField('self', blank=True, verbose_name='consonant matches', symmetrical=False,
-                                 help_text='i.e. sample and simple', related_name='consonant_matches',
-                                 related_query_name='consonant_match')
+                                 related_name='related_by_hom')
+    cns = models.ManyToManyField('self', through='CNS', blank=True, verbose_name='consonant matches', symmetrical=False,
+                                 help_text='i.e. sample and simple',
+                                 related_name='related_by_cns')
 
     class Meta:
         # for each language, there should be only one word with a certain name
@@ -138,6 +135,81 @@ class Word(models.Model):
     def __str__(self):
         """String for representing the Model object"""
         return self.name
+
+
+class WordRelation(models.Model):
+    """Base class for classes that govern the ManyToManyFields that hold words related to a word."""
+
+    # %(class)s is replaced with the lowercase of the class name in subclasses
+    source_word = models.ForeignKey(Word, on_delete=models.CASCADE, related_name='%(class)s_relations')
+    related_word = models.ForeignKey(Word, on_delete=models.CASCADE, related_name='linked_%(class)s_relations')
+
+    # an integer returned by DataMuse that indicates relative popularity or relevance of the word compared to other
+    # words in the list of related words
+    score = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        abstract = True
+
+
+class JJA(WordRelation):
+    pass
+
+
+class JJB(WordRelation):
+    pass
+
+
+class SYN(WordRelation):
+    pass
+
+
+class TRG(WordRelation):
+    pass
+
+
+class ANT(WordRelation):
+    pass
+
+
+class SPC(WordRelation):
+    pass
+
+
+class GEN(WordRelation):
+    pass
+
+
+class COM(WordRelation):
+    pass
+
+
+class PAR(WordRelation):
+    pass
+
+
+class BGA(WordRelation):
+    pass
+
+
+class BGB(WordRelation):
+    pass
+
+
+class RHY(WordRelation):
+    pass
+
+
+class NRY(WordRelation):
+    pass
+
+
+class HOM(WordRelation):
+    pass
+
+
+class CNS(WordRelation):
+    pass
 
 
 class PartOfSpeech(models.Model):

@@ -12,6 +12,7 @@ from django.views import generic
 from django.views.generic.base import ContextMixin
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 
+from words import datamuse_json
 from words.forms import RelatedWordsForm, WordSetCreateForm, WordSetChoice
 from words.models import WordSet
 
@@ -22,8 +23,8 @@ logger = logging.getLogger(__name__)
 def index(request):
     """View function for home tab of site."""
     context = {
-        "navbar_index": "active"   # make "Home" the active item in the navbar
-               }
+        "navbar_index": "active"  # make "Home" the active item in the navbar
+    }
 
     return render(request, 'words/index.html', context)
 
@@ -77,21 +78,41 @@ def visualization_related_words(request):
 
     # todo add visualization description string to context
 
+    context = {
+        'viz_title': 'Related Words',  # Visualization title to use in page title
+        'navbar_related_words': 'active',  # make "Word Relationships Visualization" the active item in the navbar
+    }
+
     if request.method == 'POST':
         # create form instances and populate them with data from the request:
-        form = RelatedWordsForm(request.POST)
+        related_words_form = RelatedWordsForm(request.POST)
+
+        if related_words_form.is_valid():
+            instance = related_words_form.cleaned_data['word']
+            code = related_words_form.cleaned_data['relation']
+            logger.debug(f"instance: {instance}, code: {code}")
+            word_attr = getattr(instance, code)
+            related_words = word_attr.all()
+            logger.debug(f'related_words: {related_words}')
+
+            # object holding the data in the format needed by the D3 Observable chart
+            json_object = {
+                "name": instance.name,
+                "children": [
+                    {"name": word.name}
+                    for word in related_words]
+            }
+            data = json.dumps(json_object)
+            context['data'] = data
 
     # if a GET (or any other method) create a blank form
     else:
-        form = RelatedWordsForm()
+        related_words_form = RelatedWordsForm()
 
-    context = {
-        'viz_title': 'Word Relationships',  # Visualization title to use in page title
-        'navbar_related_words': 'active',  # make "Word Relationships Visualization" the active item in the navbar
-        'form': form,
-    }
+    # always add form to context
+    context['related_words_form'] = related_words_form
 
-    return render(request, 'words/related_words.html', context)
+    return render(request, 'words/visualization_related_words.html', context)
 
 
 # todo view for page visualizing the frequency (google nwords) of words in a set (bubble chart)
@@ -156,12 +177,6 @@ class WordSetListView(generic.ListView):
         context = super(WordSetListView, self).get_context_data()
         context['navbar_wordsets'] = 'active'
         return context
-
-
-
-
-
-
 
 
 # views providing json data required by visualizations

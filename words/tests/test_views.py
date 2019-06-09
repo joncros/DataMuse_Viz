@@ -201,7 +201,7 @@ class VisualizationRelatedWordsTest(TestCase):
     def test_view_uses_correct_template(self):
         response = self.client.get(reverse('viz related words'))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'words/related_words.html')
+        self.assertTemplateUsed(response, 'words/visualization_related_words.html')
 
     def test_navbar_context_item(self):
         """Tests that an item exists in view context that sets the page to active in the navbar"""

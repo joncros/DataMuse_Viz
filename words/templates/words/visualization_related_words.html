@@ -2,13 +2,21 @@
 
 {% block scripts %}<!--Specific script(s) used for word relationships visualization-->{% endblock %}
 
+{% block viz %}
+    {% if data %}
+        {{ data }}
+    {% endif %}
+{% endblock %}
+
 {% block visualization_form %}
     <p>Enter word to generate visualization from</p>
     <form class="form-inline" action="" method="post">
         <!--Form used to input a single word (optionally adding it to a WordSet) for the DataMuse query-->
         {% csrf_token %}
-        {{ form }}
+        {{ related_words_form }}
         <input type="submit" value="Submit">
+        {% comment%}
         <a href="{% url 'wordset_create' %}?next={{request.path}}">Create New Word Set</a>
+        {% endcomment %}
     </form>
 {% endblock %}

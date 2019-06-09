@@ -1,5 +1,7 @@
 import time
 
+from django.core.exceptions import ValidationError
+
 from words.models import Word, PartOfSpeech
 import datamuse
 import json
@@ -117,34 +119,34 @@ def add_related(word: str, code: str):
     """Query DataMuse for the words related to the Word and add the words to the database.
 
      The relationship type used is determined by the argument code, which should be one of the strings
-     in the list relation_codes"""
+     in the list relation_codes. Returns the Word corresponding to word and the QuerySet of related words."""
     if code not in relation_codes:
         raise ValueError(f'{code} is not a valid related word code.')
     else:
         # construct string for function call using word and code and use eval() to run it
         # todo disallow special characters at either end of string word
         # todo determine what (if anything) to return from this function
+        word = word.lower()
         code_param = "rel_" + code  # parameter used by python-datamuse
 
         word_instance = Word.objects.get_or_create(name=word)[0]
-        if getattr(word_instance, code).exists():
+        word_attr = getattr(word_instance, code)
+        if word_attr.exists():
             # related words for this relation code have already been retrieved from DataMuse
             logger.debug(f'related words for word {word} and code {code} already retrieved, skipping DataMuse query')
-            return None
+            return word_instance, word_attr.all()
 
         kwargs = {
             code_param: word,
             "md": "dpf"
         }
-        try:
-            result = query_with_retry(5, 1.0, **kwargs)
-        except ConnectionError:
-            logger.exception(ConnectionError)
-            return None
+        result = query_with_retry(5, 1.0, **kwargs)
+        # except ConnectionError:
+        #     logger.exception(ConnectionError)
+        #     return None
 
         if result:
             # get appropriate field of word_instance to add related words to
-            word_attr = getattr(word_instance, code)
 
             # for each in result, get_or_create Word, update fields from JSON, and add word to appropriate field of word
             for item in result:
@@ -156,12 +158,10 @@ def add_related(word: str, code: str):
 
                 # get or create Word instance and update its fields from JSON
                 related_word = json.loads(item, object_hook=decode_word)
-                logger.debug(f'word: {word} code: {code} related word: {related_word.name} score: {score}')
+                logger.debug(f'word: {word}, code: {code}, related word: {related_word.name}, score: {score}')
 
                 # add this Word to the appropriate field of word_instance
                 word_attr.add(related_word, through_defaults={'score': score})
+            return word_instance, word_attr.all()
         else:
-            logger.info(f'{word} not recognized by DataMuse')
-            # todo raise error to propagate to form?
-
-
+            raise ValidationError(f"'{word}' not found by DataMuse, or no related words found")

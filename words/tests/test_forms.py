@@ -114,15 +114,9 @@ class WordSetCreateFormTest(TestCase):
 class WordFormTest(TestCase):
     def test_correct_fields_present(self):
         form = RelatedWordsForm()
-        self.assertIn('name', form.fields)
-        self.assertIn('language', form.fields)
-        self.assertIn('relation', form.fields)
-        self.assertIn('word_set', form.fields)
-
-    def test_word_name_field_label(self):
-        """The label for the word name should be 'word'."""
-        form = RelatedWordsForm()
-        self.assertEqual(form.fields['name'].label, 'Word')
+        self.assertIn('word', form.fields)
+        self.assertIn('relations', form.fields)
+        self.assertIn('results', form.fields)
 
 
 class WordSetChoiceTest(TestCase):

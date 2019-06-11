@@ -14,7 +14,7 @@ from django.views.generic.edit import CreateView, UpdateView, DeleteView
 
 from words import datamuse_json
 from words.forms import RelatedWordsForm, WordSetCreateForm, WordSetChoice
-from words.models import WordSet
+from words.models import WordSet, Word
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -84,26 +84,36 @@ def visualization_related_words(request):
     }
 
     if request.method == 'POST':
-        # create form instances and populate them with data from the request:
+        # create form instances and populate them with data from the request
         related_words_form = RelatedWordsForm(request.POST)
 
         if related_words_form.is_valid():
             instance = related_words_form.cleaned_data['word']
-            code = related_words_form.cleaned_data['relation']
-            logger.debug(f"instance: {instance}, code: {code}")
-            word_attr = getattr(instance, code)
-            related_words = word_attr.all()
-            logger.debug(f'related_words: {related_words}')
+            codes = related_words_form.cleaned_data['relations']
+            results = related_words_form.cleaned_data['results']
+            logger.debug(f"instance: {instance}, code: {codes}")
 
-            # object holding the data in the format needed by the D3 Observable chart
-            json_object = {
+            result_dict = {
                 "name": instance.name,
                 "children": [
-                    {"name": word.name}
-                    for word in related_words]
+                    {
+                        "name":
+                            Word._meta.get_field(code).verbose_name,
+                        "children": [
+                            {
+                                "name": relation.related_word.name,
+                                "score": relation.score
+                            }
+                            for relation in
+                            results[code].order_by("-score")
+                            ]
+                    }
+                    for code in codes
+                ]
             }
-            data = json.dumps(json_object)
-            context['data'] = data
+
+            context['root_word'] = instance.name
+            context['result_dict'] = result_dict
 
     # if a GET (or any other method) create a blank form
     else:
@@ -178,14 +188,3 @@ class WordSetListView(generic.ListView):
         context['navbar_wordsets'] = 'active'
         return context
 
-
-# views providing json data required by visualizations
-
-
-def word_frequencies_for_wordset(request):
-    """Returns json holding the words from a wordset and their frequency, for use by the word frequency bubble chart.
-
-    In the future, words may be grouped by their part of speech. This would determine the color of the bubble for each word.
-    Returns an array of json objects. The chart requires object to have a name, title, group and value. Here,
-    the name is the word, the title is word([parts of speech]), the group is the same for all words and the value is the
-     word frequency."""

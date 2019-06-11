@@ -213,7 +213,7 @@ class VisualizationRelatedWordsTest(TestCase):
         """Tests that the correct visualization title is passed in the context"""
         response = self.client.get(reverse('viz related words'))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['viz_title'], 'Word Relationships')
+        self.assertEqual(response.context['viz_title'], 'Related Words')
 
 
 class VisualizationFrequencyTest(TestCase):

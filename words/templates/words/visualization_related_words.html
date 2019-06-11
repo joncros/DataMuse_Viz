@@ -3,9 +3,64 @@
 {% block scripts %}<!--Specific script(s) used for word relationships visualization-->{% endblock %}
 
 {% block viz %}
-    {% if data %}
-        {{ data }}
+    {% if result_dict %}
+        <script type="module">
+            // convert result_dict to format digestible by js
+            var result_dict = {{result_dict|safe }};
+
+            // Load the D3 Observable runtime and inspector.
+            import {Runtime, Inspector} from "https://cdn.jsdelivr.net/npm/@observablehq/runtime@4/dist/runtime.js";
+
+            // Display debug messages in browser console
+            new Runtime().module(notebook, name => {
+              return {
+                pending() { console.log(`${name} is running…`); },
+                fulfilled(value) { console.log(name, value); },
+                rejected(error) { console.error(error); }
+              };
+            });
+
+            // Radial Dendrogram Chart notebook, compiled as an ES module.
+            import notebook from "https://api.observablehq.com/@joncros/radial-dendrogram.js?v=3";
+
+            // Load the Chart
+            const main = new Runtime().module(notebook, name => {
+              if (name === "chart") {
+                return new Inspector(document.querySelector("#visualization"));
+              }
+              else if (name === "viewof max") {
+                return new Inspector(document.querySelector("#max"));
+              }
+              else if (name === "viewof remove_from_end") {
+                return new Inspector(document.querySelector("#remove_from_end"));
+              }
+            });
+
+            // Load extra controls for limiting the words displayed per relation
+            //const max = new Runtime().module(notebook, name => {
+            //  else if (name === "viewof max") {
+            //    return new Inspector(document.querySelector("#max"));
+            //  }
+            //});
+
+            //const remove_from_end = new Runtime().module(notebook, name => {
+            //  if (name === "viewof remove_from_end") {
+            //    return new Inspector(document.querySelector("#remove_from_end"));
+            //  }
+            //});
+
+            //Reload chart using appropriate data
+            main.redefine("data", result_dict);
+
+        </script>
+
     {% endif %}
+{% endblock %}
+
+{% block legend %}
+<p>If you wish to reduce the number of words displayed in the chart after it has loaded, use these controls below.</p>
+<div id="max" class="form-group"></div>
+<div id="remove_from_end" class="form-group"></div>
 {% endblock %}
 
 {% block visualization_form %}
@@ -15,7 +70,7 @@
         {% csrf_token %}
         {{ related_words_form }}
         <input type="submit" value="Submit">
-        {% comment%}
+        {% comment %}
         <a href="{% url 'wordset_create' %}?next={{request.path}}">Create New Word Set</a>
         {% endcomment %}
     </form>

@@ -59,6 +59,8 @@ def decode_word(dct):
     else:
         word = Word.objects.get_or_create(name=dct['word'])[0]
 
+        # todo encountered "." in a datamuse result (frequency = 0). Reject punctuation or f = 0 results?
+
         # update word to indicate successful DataMuse query
         word.datamuse_success = True
 
@@ -130,25 +132,24 @@ def add_related(word: str, code: str):
         code_param = "rel_" + code  # parameter used by python-datamuse
 
         word_instance = Word.objects.get_or_create(name=word)[0]
+
+        # the related word field for the word
         word_attr = getattr(word_instance, code)
+
+        # the corresponding set of relationships (relationship being a subclass of models.WordRelation)
+        relations = getattr(word_instance, f'{code}_relations')
+
         if word_attr.exists():
-            # related words for this relation code have already been retrieved from DataMuse
             logger.debug(f'related words for word {word} and code {code} already retrieved, skipping DataMuse query')
-            return word_instance, word_attr.all()
+            return word_instance, relations
 
         kwargs = {
             code_param: word,
             "md": "dpf"
         }
         result = query_with_retry(5, 1.0, **kwargs)
-        # except ConnectionError:
-        #     logger.exception(ConnectionError)
-        #     return None
 
         if result:
-            # get appropriate field of word_instance to add related words to
-
-            # for each in result, get_or_create Word, update fields from JSON, and add word to appropriate field of word
             for item in result:
                 # get the word's score value (it's relevance compared to other words in the query)
                 score = item['score']
@@ -162,6 +163,8 @@ def add_related(word: str, code: str):
 
                 # add this Word to the appropriate field of word_instance
                 word_attr.add(related_word, through_defaults={'score': score})
-            return word_instance, word_attr.all()
+
+            return word_instance, relations
         else:
-            raise ValidationError(f"'{word}' not found by DataMuse, or no related words found")
+            verbose_code = Word._meta.get_field(code).verbose_name
+            raise ValidationError(f"'{word}' not found by DataMuse, or no related words found for {verbose_code}")

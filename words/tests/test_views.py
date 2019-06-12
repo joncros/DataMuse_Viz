@@ -81,6 +81,29 @@ class WordSetCreateTest(TestCase):
         response = self.client.post('/words/wordset/create/?next=/words/', {'name': 'test1', 'words': 'word\r\ntest'})
         self.assertRedirects(response, '/words/')
 
+    def test_word_occurrences_counted(self):
+        """Tests that if the same word appears multiple times in the words field and/or text file, the occurrences field
+         in the WordSet.words relationship is properly set."""
+        from words.models import Membership
+
+        with open("text.txt", "w") as upload_file:
+            upload_file.write("pizza and pizza pizza pizza")
+        with open("text.txt", "rb") as upload_file:
+            response = self.client.post('/words/wordset/create/',
+                                        {'name': 'test1', 'words': 'a\r\nwhat\r\nwhat\r\nand', 'text_file': upload_file})
+
+            a_member = Membership.objects.get(wordset__name='test1', word__name='a')
+            self.assertEqual(a_member.occurrences, 1)
+
+            what_member = Membership.objects.get(wordset__name='test1', word__name='what')
+            self.assertEqual(what_member.occurrences, 2)
+
+            and_member = Membership.objects.get(wordset__name='test1', word__name='and')
+            self.assertEqual(and_member.occurrences, 2)
+
+            pizza_member = Membership.objects.get(wordset__name='test1', word__name='pizza')
+            self.assertEqual(pizza_member.occurrences, 4)
+
 
 class WordSetDetailViewTest(TestCase):
     @classmethod

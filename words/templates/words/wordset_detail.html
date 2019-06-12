@@ -9,8 +9,8 @@
     <h4>Words</h4>
 
     <ul>
-        {% for word in wordset.words.all %}
-            <li>{{ word.name }}</li>
+        {% for membership in wordset.membership_set.all %}
+            <li>{{ membership.word.name }}, occurrences: {{ membership.occurrences }}</li>
         {% endfor %}
     </ul>
 

@@ -1,0 +1,18 @@
+{% extends "words/visualization_generic.html" %}
+
+{% block viz %}
+    {% if word_data %}
+        {{ word_data }}
+    {% endif %}
+{% endblock %}
+
+{% block visualization_form %}
+    <p>Select Word Set to generate visualization from</p>
+    <form class="form-inline" action="" method="post">
+        <!--Form used to choose a WordSet to generate the visualization from-->
+        {% csrf_token %}
+        {{ form }}
+        <input type="submit" value="Submit">
+        <p><a href="{% url 'wordset_create' %}?next={{request.path}}">Create New Word Set</a></p>
+    </form>
+{% endblock %}

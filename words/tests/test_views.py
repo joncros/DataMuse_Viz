@@ -286,4 +286,29 @@ class VisualizationFrequencyTest(TestCase):
         wordset_data = response.context['wordset_data']
         self.assertRegex(wordset_data, pattern)
 
-    # todo test viz description included in context
+
+class VisualizationFrequencyScatterplotTest(TestCase):
+    def test_view_url_exists_at_desired_location(self):
+        response = self.client.get('/words/scatterplot/')
+        self.assertEqual(response.status_code, 200)
+
+    def test_view_url_accessible_by_name(self):
+        response = self.client.get(reverse('viz frequency scatterplot'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_view_uses_correct_template(self):
+        response = self.client.get(reverse('viz frequency scatterplot'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'words/visualization_frequency_scatterplot.html')
+
+    def test_navbar_context_item(self):
+        """Tests that an item exists in view context that sets the page to active in the navbar"""
+        response = self.client.get(reverse('viz frequency scatterplot'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['navbar_frequency_scatterplot'], 'active')
+
+    def test_visualization_title_test(self):
+        """Tests that the correct visualization title is passed in the context"""
+        response = self.client.get(reverse('viz frequency scatterplot'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['viz_title'], 'Occurrences vs Frequencies Scatterplot')

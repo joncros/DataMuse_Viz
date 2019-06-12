@@ -72,11 +72,58 @@ def visualization_frequency(request):
     return render(request, 'words/visualization_frequency.html', context)
 
 
+def visualization_frequency_scatterplot(request):
+    """View for a chart that plots frequency of words vs their number of occurrences in a WordSet."""
+    context = {
+        'viz_title': 'Occurrences vs Frequencies Scatterplot',  # Visualization title to use in page title
+        'navbar_frequency_scatterplot': 'active',  # make this page the active item in the navbar
+    }
+
+    if request.method == 'POST':
+        form = WordSetChoice(request.POST)
+
+        if form.is_valid():
+            set_instance = form.cleaned_data['word_set']
+            logger.debug(set_instance.name)
+
+            # get the Membership objects (each holds the word and occurrences in the WordWet) linked to the WordSet
+            queryset = set_instance.membership_set.all()
+
+            # apply limits on word frequency (if any)
+            if form.cleaned_data['frequency_gt']:
+                queryset = queryset.filter(word__frequency__gt=form.cleaned_data['frequency_gt'])
+            if form.cleaned_data['frequency_lt']:
+                queryset = queryset.filter(word__frequency__lt=form.cleaned_data['frequency_lt'])
+
+            logger.debug(queryset)
+
+            # objects to pass to D3
+            data_list = [
+                {
+                    "name": membership.word.name,
+                    "x": membership.word.frequency,
+                    "y": membership.occurrences
+                }
+                for membership in queryset]
+
+            # format data_list as json string
+            word_data = json.dumps(data_list, cls=DjangoJSONEncoder)
+            context['word_data'] = word_data
+
+    # if a GET (or any other method) create a blank form
+    else:
+        form = WordSetChoice()
+
+    # always add form to context
+    context['form'] = form
+    logger.debug(context)
+
+    return render(request, 'words/visualization_frequency_scatterplot.html', context)
+
+
 def visualization_related_words(request):
     """View for the word relationship visualization"""
-    # todo refactor into class-based visualization view that I can subclass?
-
-    # todo add visualization description string to context
+    # todo add visualization documentation to template
 
     context = {
         'viz_title': 'Related Words',  # Visualization title to use in page title

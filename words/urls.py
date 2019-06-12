@@ -8,5 +8,6 @@ urlpatterns = [
     path('wordset/<int:pk>/delete/', views.WordSetDelete.as_view(), name='wordset_delete'),
     path('wordset/create/', views.WordSetCreate.as_view(), name='wordset_create'),
     path('frequencies/', views.visualization_frequency, name='viz frequency'),
+    path('scatterplot/', views.visualization_frequency_scatterplot, name='viz frequency scatterplot'),
     path('related_words/', views.visualization_related_words, name='viz related words'),
 ]

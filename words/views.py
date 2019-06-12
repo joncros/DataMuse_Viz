@@ -49,8 +49,9 @@ def visualization_frequency(request):
             if form.cleaned_data['frequency_gt']:
                 queryset = queryset.filter(frequency__gt=form.cleaned_data['frequency_gt'])
             if form.cleaned_data['frequency_lt']:
-                queryset = set_instance.words.filter(frequency__lt=form.cleaned_data['frequency_lt'])
+                queryset = queryset.filter(frequency__lt=form.cleaned_data['frequency_lt'])
 
+            # objects to pass to D3
             json_list = [
                 {
                     "name": word.name,
@@ -67,6 +68,7 @@ def visualization_frequency(request):
     else:
         form = WordSetChoice()
 
+    # always add form to context
     context['form'] = form
 
     return render(request, 'words/visualization_frequency.html', context)

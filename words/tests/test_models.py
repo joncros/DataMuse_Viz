@@ -136,6 +136,14 @@ class WordSetTest(TestCase):
         with self.assertRaises(IntegrityError):
             WordSet.objects.create(name="Test Set 1", creator=test_user, description="one")
 
+    def test_unique_word_per_wordset(self):
+        word_set = WordSet.objects.get(name="Test Set 1")
+        word = Word.objects.create(name="apply")
+        word_set.words.add(word)
+        word_set.words.add(word)
+        count = word_set.words.count()
+        self.assertEqual(count, 1)
+
     def test_absolute_url(self):
         word_set = WordSet.objects.get(name="Test Set 1")
         pk = word_set.id

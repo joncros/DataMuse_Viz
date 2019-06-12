@@ -43,7 +43,7 @@ class WordQuerySet(models.query.QuerySet):
 
     A search for an object with name='The' would return the object with name='the'."""
     def get(self, **kwargs):
-        if kwargs['name']:
+        if 'name' in kwargs:
             kwargs['name'] = kwargs['name'].lower()
         return super().get(**kwargs)
 
@@ -242,7 +242,8 @@ class WordSet(models.Model):
     name = models.CharField(max_length=100, help_text="Enter a unique name for this set of words")
     description = models.TextField(blank=True, help_text="Enter a description for this set of words")
     creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
-    words = models.ManyToManyField(Word, related_name='words', related_query_name='word', blank=True)
+    words = models.ManyToManyField(Word, through='Membership', related_name='words', related_query_name='word',
+                                   blank=True)
 
     class Meta:
         # for each creator, there should only be one wordset with a given name
@@ -260,3 +261,15 @@ class WordSet(models.Model):
             creator_string = f' (created by {self.creator})'
         return f'{self.name}' + creator_string
 
+
+class Membership(models.Model):
+    """Class holding information for a word's inclusion in a wordset.
+
+    Occurrences is the number of times the word appears in the set."""
+    word = models.ForeignKey(Word, on_delete=models.CASCADE)
+    wordset = models.ForeignKey(WordSet, on_delete=models.CASCADE)
+    occurrences = models.IntegerField(default=1)
+
+    class Meta:
+        # for each WordSet and word, there should be only one Membership
+        constraints = [models.UniqueConstraint(fields=['word', 'wordset'], name='unique_word_per_wordset'), ]

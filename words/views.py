@@ -1,3 +1,4 @@
+import decimal
 import json
 import logging
 
@@ -103,10 +104,12 @@ def visualization_frequency_scatterplot(request):
             data_list = [
                 {
                     "name": membership.word.name,
-                    "x": membership.word.frequency,
-                    "y": membership.occurrences
+                    "x": membership.occurrences,
+                    "y": membership.word.frequency
                 }
                 for membership in queryset]
+
+            logger.debug(f'data_list: {data_list}')
 
             # format data_list as json string
             word_data = json.dumps(data_list, cls=DjangoJSONEncoder)

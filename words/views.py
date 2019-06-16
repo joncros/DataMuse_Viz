@@ -128,7 +128,6 @@ def visualization_frequency_scatterplot(request):
 
 def visualization_related_words(request):
     """View for the word relationship visualization"""
-    # todo add visualization documentation to template
 
     context = {
         'viz_title': 'Related Words',  # Visualization title to use in page title
@@ -175,12 +174,6 @@ def visualization_related_words(request):
     context['related_words_form'] = related_words_form
 
     return render(request, 'words/visualization_related_words.html', context)
-
-
-# todo view for page visualizing the frequency (google nwords) of words in a set (bubble chart)
-
-
-# todo? view for page visualizing # of occurrences of words in a set of words vs nwords frequency of the words
 
 
 class WordSetDetailView(generic.DetailView):

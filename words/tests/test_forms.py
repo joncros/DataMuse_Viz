@@ -147,6 +147,3 @@ class WordSetChoiceTest(TestCase):
         form = WordSetChoice(post_dict)
         self.assertFalse(form.is_valid())
         self.assertIn(message, form.errors['__all__'])
-
-
-# todo? test password reset form? (I may want to add a label for the email field)

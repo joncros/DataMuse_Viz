@@ -59,8 +59,6 @@ def decode_word(dct):
     else:
         word = Word.objects.get_or_create(name=dct['word'])[0]
 
-        # todo encountered "." in a datamuse result (frequency = 0). Reject punctuation or f = 0 results?
-
         # update word to indicate successful DataMuse query
         word.datamuse_success = True
 
@@ -104,7 +102,7 @@ def add_or_update_word(word: str):
         return None
 
     # check if result is not empty and the entry is a word that exactly matches the parameter
-    if result and result[0]['word'] == word:  # todo match plural? match same word with '-' in middle?
+    if result and result[0]['word'] == word:
         # convert result to string that json.loads can read
         # result is a list (of size one because api parameter max=1) of json objects holding data concerning the word
         result = json.dumps(result[0])
@@ -126,8 +124,6 @@ def add_related(word: str, code: str):
         raise ValueError(f'{code} is not a valid related word code.')
     else:
         # construct string for function call using word and code and use eval() to run it
-        # todo disallow special characters at either end of string word
-        # todo determine what (if anything) to return from this function
         word = word.lower()
         code_param = "rel_" + code  # parameter used by python-datamuse
 

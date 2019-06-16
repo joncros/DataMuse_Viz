@@ -2,7 +2,8 @@ import unittest.mock
 
 from django.test import TestCase
 
-from words.datamuse_json import add_or_update_word, add_related
+from words.datamuse_json import add_or_update_word, add_related, query_with_retry
+from words.models import Word
 
 
 class AddOrUpdateWordTest(TestCase):
@@ -41,6 +42,7 @@ class AddOrUpdateWordTest(TestCase):
 
 
 class AddRelatedTest(TestCase):
+    # todo add_related tests
     def test_word_parameter_is_none(self):
         """Tests add_related with parameter word = None"""
         pass

@@ -256,6 +256,7 @@ class WordSet(models.Model):
     def __str__(self):
         """String for representing the Model object"""
         # if creator null, UniqueConstraint cannot be enforced; so identify wordset by name and id
+        # todo instead of displaying id with anonymous creator, add an int to name based on how many other wordsets with this name exist?
         creator_string = f' ({self.id})'
         if self.creator is not None:
             creator_string = f' (created by {self.creator})'

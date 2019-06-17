@@ -1,5 +1,6 @@
 import unittest.mock
 
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 from words.datamuse_json import add_or_update_word, add_related, query_with_retry
@@ -42,23 +43,47 @@ class AddOrUpdateWordTest(TestCase):
 
 
 class AddRelatedTest(TestCase):
-    # todo add_related tests
     def test_word_parameter_is_none(self):
         """Tests add_related with parameter word = None"""
-        pass
+        word = None
+        code = "jja"
+        message = f"Parameter 'word={word}' is None or whitespace."
+        with self.assertRaisesRegex(ValueError, message):
+            result = add_related(word=word, code=code)
 
     def test_parameter_is_empty_string(self):
-        pass
+        word = ""
+        code = "jja"
+        message = f"Parameter 'word={word}' is None or whitespace."
+        with self.assertRaisesRegex(ValueError, message):
+            result = add_related(word=word, code=code)
 
     def test_word_parameter_is_whitespace(self):
         """Tests add_related with parameter word containing only whitespace characters"""
-        pass
+        word = " \t"
+        code = "jja"
+        message = f"Parameter 'word={word}' is None or whitespace."
+        with self.assertRaisesRegex(ValueError, message):
+            result = add_related(word=word, code=code)
 
     def test_word_not_found_by_datamuse(self):
         """Tests add_related with a word that will not be found by datamuse"""
+        word = "ssdfio"
+        code = "jja"
+        regex = f"'{word}' not found by DataMuse, or no related words found for "
+        with self.assertRaisesRegex(ValidationError, regex):
+            result = add_related(word=word, code=code)
 
     def test_invalid_code_parameter(self):
-        pass
+        word = "test"
+        code = "a"
+        regex = f'{code} is not a valid related word code.'
+        with self.assertRaisesRegex(ValueError, regex):
+            result = add_related(word=word, code=code)
 
-    def test_connection_error(self):
-        pass
+    @unittest.mock.patch('words.datamuse_json.query_with_retry')
+    def test_connection_error(self, query_with_retryMock):
+        message = 'DataMuse service unavailable'
+        query_with_retryMock.side_effect = ConnectionError(message)
+        with self.assertRaisesRegex(ConnectionError, message):
+            result = add_related("bat", "jja")

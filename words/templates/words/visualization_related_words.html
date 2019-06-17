@@ -90,7 +90,33 @@
     <form class="form-inline" action="" method="post">
         <!--Form used to input a single word (optionally adding it to a WordSet) for the DataMuse query-->
         {% csrf_token %}
-        {{ related_words_form }}
+        {{ form.non_field_errors }}
+
+        <div>
+            <div class="col-lg-1 col-sm-1 col-xs-1">
+                {{ form.word.label_tag }}
+            </div>
+            <div class="col-lg-11 col-sm-11 col-xs-11">
+                {{ form.word }}
+                {{ form.word.errors }}
+            </div>
+        </div>
+
+        {% for field in form %}
+            {% if 'checkbox' in field.as_widget %}
+                <div class="col-lg-1 col-sm-1 col-xs-1">
+                {{ field.label_tag }}
+                </div>
+                <div class="col-lg-11 col-sm-11 col-xs-11">
+                {% for checkbox in form.relations %}
+                    <label class="checkbox-inline">
+                        {{ checkbox.tag }} {{ checkbox.choice_label }}
+                    </label>
+                {% endfor %}
+                </div>
+            {% endif %}
+        {% endfor %}
+
         <input type="submit" value="Submit">
     </form>
 {% endblock %}

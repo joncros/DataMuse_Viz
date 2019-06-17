@@ -136,12 +136,12 @@ def visualization_related_words(request):
 
     if request.method == 'POST':
         # create form instances and populate them with data from the request
-        related_words_form = RelatedWordsForm(request.POST)
+        form = RelatedWordsForm(request.POST)
 
-        if related_words_form.is_valid():
-            instance = related_words_form.cleaned_data['word']
-            codes = related_words_form.cleaned_data['relations']
-            results = related_words_form.cleaned_data['results']
+        if form.is_valid():
+            instance = form.cleaned_data['word']
+            codes = form.cleaned_data['relations']
+            results = form.cleaned_data['results']
             logger.debug(f"instance: {instance}, code: {codes}")
 
             result_dict = {
@@ -168,10 +168,10 @@ def visualization_related_words(request):
 
     # if a GET (or any other method) create a blank form
     else:
-        related_words_form = RelatedWordsForm()
+        form = RelatedWordsForm()
 
     # always add form to context
-    context['related_words_form'] = related_words_form
+    context['form'] = form
 
     return render(request, 'words/visualization_related_words.html', context)
 

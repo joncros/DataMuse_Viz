@@ -34,7 +34,24 @@
     {% endif %}
 {% endblock %}
 
-<!--todo documentation-->
+{% block viz-text %}
+<p>
+    This chart is a scatter plot showing the words in a selected Word Set. It plots the relationship between a word's
+    frequency (the vertical axis) and the number of occurrences of the word in the Word Set (the horizontal axis).
+</p>
+<p>
+    Frequency indicated the number of times the word is used per million words of English text, according to Google Book Ngrams via
+    Datamuse.
+</p>
+<p>
+    Placing your cursor over a word will show the values for f (the frequency) and num (the number of occurrences
+    in the Word Set).
+</p>
+<p>
+    The source code for this chart can be found at <a href="https://observablehq.com/@joncros/scatterplot">
+    https://observablehq.com/@joncros/scatterplot</a>.
+</p>
+{% endblock %}
 
 {% block visualization_form %}
     <p>Select Word Set to generate visualization from</p>

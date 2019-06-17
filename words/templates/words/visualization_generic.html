@@ -20,11 +20,15 @@
             <div id="legend" class="panel panel-default col-lg-3 col-sm-3 col-xs-3">
                 <!--Explanatory text and legend belonging to visualization here-->
                 <div class="panel-body">
-                <p>documentation</p>
-                <p>documentation documentation documentation documentation documentation
-                    documentation documentation documentation documentation documentation
-                    documentation documentation documentation documentation documentation </p>
-                {% block viz-text %} {% endblock %}
+
+                {% block viz-text %}
+                    <p>documentation</p>
+                    <p>
+                        documentation documentation documentation documentation documentation
+                        documentation documentation documentation documentation documentation
+                        documentation documentation documentation documentation documentation
+                    </p>
+                    {% endblock %}
                 {% block legend %} {% endblock %}
                 </div>
             </div>

@@ -1,20 +1,146 @@
 {% extends "base_generic.html" %}
 
 {% block content %}
-<div id="about" class="col-md-offset-2 col-xs-offset-2 col-lg-8 col-sm-8 col-xs-8">
+<div id="about" class="col-md-offset-1 col-xs-offset-1 col-lg-10 col-sm-10 col-xs-10">
     <div class="row scroll">
         <div class="col-md-offset-1 col-xs-offset-1 col-lg-10 col-sm-10 col-xs-10">
             <h3 style="text-align: center; margin-right: 25px;">DataMuse-Viz</h3>
-            <!--todo finish-->
+
             <p>
-                <b>Note that clicking on a link will cause the browser to visit that page and "back" will
-				cause a reload of the visualization page.  Right click on a link to open that page in a new tab.</b>
+                This site uses the word-finding api <a href="http://www.datamuse.com/api/">DataMuse</a> and the python
+                package <a href="https://github.com/margaret/python-datamuse">python-datamuse</a> to retrieve data for
+                English words. <a href="https://observablehq.com/">D3 Observable</a> is used to generate visualizations
+                illustrating this data. This site was built using Django.
             </p>
-            <p>This site makes use of the
-                <a href="http://www.datamuse.com/api/">DataMuse api</a> and
-                <a href="https://github.com/margaret/python-datamuse">python-datamuse</a>
-                to provide visualizations illustrating relationships between words.
+
+            <p>
+                Users can create Word Sets, which are lists of words from which to generate visualizations. The
+                occurrences of each word (number of times each word appears in the Word Set) is saved.
             </p>
+
+            <p><strong>Visualizations:</strong></p>
+            <ul>
+                <li>
+                    Word Frequencies: A chart illustrating the frequency of each words in a Word Set. Here, frequency
+                    refers to how often a word appears per million words of English text (according to
+                    <a href="https://books.google.com/ngrams">Google Books Ngrams</a> via Datamuse).
+                </li>
+                <li>
+                    Word Frequencies Scatterplot: For all words in a Word Set, plots the frequency vs. the number of
+                    occurrences in the Word Set.
+                </li>
+                <li>
+                    Related Words: For a given word, displays its related words for one or more word relationship types
+                    on a radial dendrogram.
+                </li>
+            </ul>
+
+             <p>
+                 <strong>Word Relationships</strong> These are the types of relationships that can be used for the Related
+                 Words visualization, along with the associated codes used in DataMuse queries:
+             </p>
+            <div>
+                <table class="fullwidth">
+                <thead>
+                <th width=60>[code]</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th width=200>Example</th>
+                </thead>
+                <tbody>
+                <tr>
+                  <td align=left>rel_jja</td>
+                    <td align=left>Popular Related Nouns</td>
+                  <td align=left>nouns that are frequently associated with the given word</td>
+                  <td align=left>gradual &rarr; increase</td>
+                </tr>
+                <tr>
+                  <td align=left>rel_jjb</td>
+                    <td align=left>Popular Related Adjectives</td>
+                  <td align=left>adjectives that are frequently associated with the given word</td>
+                  <td align=left>beach &rarr; sandy</td>
+                </tr>
+                <tr>
+                  <td align=left>rel_syn</td>
+                  <td align=left>Synonyms</td>
+                    <td align=left></td>
+                  <td align=left>ocean &rarr; sea</td>
+                </tr>
+                <tr>
+                  <td align=left>rel_trg</td>
+                    <td align=left>Triggers</td>
+                  <td align=left>words that are statistically associated with the query word in the same piece of text.</td>
+                  <td align=left>cow &rarr; milking</td>
+                </tr>
+                <tr>
+                  <td align=left>rel_ant</td>
+                  <td align=left>Antonyms</td>
+                    <td align=left></td>
+                  <td align=left>late &rarr; early</td>
+                </tr>
+                <tr>
+                  <td align=left>rel_spc</td>
+                    <td align=left>Hypernyms</td>
+                  <td align=left>words with a similar, but broader meaning</td>
+                  <td align=left>gondola &rarr; boat</td>
+                </tr>
+                <tr>
+                  <td align=left>rel_gen</td>
+                    <td align=left>Hyponyms</td>
+                  <td align=left>words with a similar, but more specific meaning</td>
+                  <td align=left>boat &rarr; gondola</td>
+                </tr>
+                <tr>
+                  <td align=left>rel_com</td>
+                    <td align=left>Comprises
+                  <td align=left>things which this is composed of</td>
+                  <td align=left>car &rarr; accelerator</td>
+                </tr>
+                <tr>
+                  <td align=left>rel_par</td>
+                    <td align=left>Part Of</td>
+                  <td align=left>things of which this is a part of</td>
+                  <td align=left>trunk &rarr; tree</td>
+                </tr>
+                <tr>
+                  <td align=left>rel_bga</td>
+                    <td align=left>Frequent Followers
+                  <td align=left>words that frequently follow this</td>
+                  <td align=left>wreak &rarr; havoc</td>
+                </tr>
+                <tr>
+                  <td align=left>rel_bgb</td>
+                    <td align=left>Frequent Predecessors
+                  <td align=left>words that frequently precede this</td>
+                  <td align=left>havoc &rarr; wreak</td>
+                </tr>
+                <tr>
+                  <td align=left>rel_rhy</td>
+                  <td align=left>Rhymes</td>
+                    <td align=left>"perfect" rhymes</td>
+                  <td align=left>spade &rarr; aid</td>
+                </tr>
+                <tr>
+                  <td align=left>rel_nry</td>
+                  <td align=left>Near Rhymes</td>
+                    <td align=left>approximate rhymes</td>
+                  <td align=left>forest &rarr; chorus</td>
+                </tr>
+                <tr>
+                  <td align=left>rel_hom</td>
+                  <td align=left>Homophones</td>
+                    <td align=left>sound-alike words</td>
+                  <td align=left>course &rarr; coarse</td>
+                </tr>
+                <tr>
+                  <td align=left>rel_cns</td>
+                  <td align=left>Consonant matches</td>
+                    <td align=left></td>
+                  <td align=left>sample &rarr; simple</td>
+                </tr>
+                </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

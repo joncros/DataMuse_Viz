@@ -2,10 +2,6 @@
 
 {% block scripts %}<!--Specific script(s) used for word frequencies visualization-->{% endblock %}
 
-{% block legend %}
-    <p><strong>words displayed: {{ wordcount }}</strong></p>
-{% endblock %}
-
 {% block viz %}
 {% if wordset_data %}
 <script type="module">
@@ -40,10 +36,31 @@ main.redefine("data", wordset_data);
 </script>
 {% endblock %}
 
-<!--todo documentation-->
+{% block viz-text %}
+<p>
+    This page displays a bubble chart showing all of the word from a Word Set. The size of each circle is proportional
+    to the frequency of the word, how often the word is used per million words of English text (according to Google Book
+    Ngrams via Datamuse).
+</p>
+<p>
+    Placing your cursor over the center of each circle will show the word along with the value of its frequency.
+</p>
+<p>
+    If desired, the words included in the chart can be limited by setting an upper and/or lower limit on the frequency
+    of the words to show and clicking "submit" again.
+</p>
+<p>
+    The source code for this chart can be found at <a href="https://observablehq.com/@joncros/bubble-chart">
+    https://observablehq.com/@joncros/bubble-chart</a>.
+</p>
+{% endblock %}
+
+{% block legend %}
+    <p><strong>words displayed: {{ wordcount }}</strong></p>
+{% endblock %}
 
 {% block visualization_form %}
-    <p>Select Word Set to generate visualization from</p>
+    <p>Select Word Set to generate visualization from:</p>
     <form class="form-inline" action="" method="post">
         <!--Form used to choose a WordSet to generate the visualization from-->
         {% csrf_token %}

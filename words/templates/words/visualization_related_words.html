@@ -57,23 +57,40 @@
     {% endif %}
 {% endblock %}
 
-<!--todo documentation-->
+{% block viz-text %}
+<p>
+    This chart is a radial dendrogram showing words related to a given word. Type a word and select one or more
+    relations to display on the chart. Information and examples for each relationship type can be found on
+    <a href="{% url 'index' %}">the home page</a>.
+</p>
+<p>
+    If some words are difficult to read, you can hover your cursor over each word to see the word. Hovering over the
+    name of a relation will show the number of words belonging to that relation that are included in the chart (i.e.,
+    hovering over "synonyms" will show the number of synonyms displayed on the chart). Hovering over the word in the
+    center will show the total number of related words displayed.
+</p>
+<p>
+    The source code for this chart can be found at <a href="https://observablehq.com/@joncros/radial-dendrogram">
+    https://observablehq.com/@joncros/radial-dendrogram</a>.
+</p>
+{% endblock %}
 
 {% block legend %}
-<p>If you wish to reduce the number of words displayed in the chart after it has loaded, use these controls below.</p>
-<div id="max" class="form-group"></div>
-<div id="remove_from_end" class="form-group"></div>
+    {% if result_dict %}
+        <p>
+            If you wish to reduce the number of words displayed in the chart, use these controls below.
+        </p>
+        <div id="max" class="form-group"></div>
+        <div id="remove_from_end" class="form-group"></div>
+    {% endif %}
 {% endblock %}
 
 {% block visualization_form %}
-    <p>Enter word to generate visualization from</p>
+    <p>Enter word and relations to generate visualization from:</p>
     <form class="form-inline" action="" method="post">
         <!--Form used to input a single word (optionally adding it to a WordSet) for the DataMuse query-->
         {% csrf_token %}
         {{ related_words_form }}
         <input type="submit" value="Submit">
-        {% comment %}
-        <a href="{% url 'wordset_create' %}?next={{request.path}}">Create New Word Set</a>
-        {% endcomment %}
     </form>
 {% endblock %}

@@ -141,6 +141,16 @@ class RelatedWordsFormTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn(message, form.non_field_errors())
 
+    @mock.patch('words.datamuse_json.add_related')
+    def test_datamuse_json_value_error(self, add_relatedMock):
+        """Tests that a ValueError from datamuse_json results in a ValidationError"""
+        post_dict = {'word': 'walk', 'relations': ['jja']}
+        message = 'ValueError message'
+        add_relatedMock.side_effect = ValueError(message)
+        form = RelatedWordsForm(post_dict)
+        self.assertFalse(form.is_valid())
+        self.assertIn("Invalid parameter for DataMuse query: " + message, form.non_field_errors())
+
 
 class WordSetChoiceTest(TestCase):
     def test_correct_fields_present(self):

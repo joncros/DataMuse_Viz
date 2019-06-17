@@ -122,6 +122,8 @@ def add_related(word: str, code: str):
      in the list relation_codes. Returns the Word corresponding to word and the QuerySet of related words."""
     if code not in relation_codes:
         raise ValueError(f'{code} is not a valid related word code.')
+    elif not word or word.isspace():
+        raise ValueError(f"Parameter 'word={word}' is None or whitespace.")
     else:
         # construct string for function call using word and code and use eval() to run it
         word = word.lower()

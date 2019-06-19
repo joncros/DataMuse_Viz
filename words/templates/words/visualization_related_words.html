@@ -23,7 +23,7 @@
             // Radial Dendrogram Chart notebook, compiled as an ES module.
             import notebook from "https://api.observablehq.com/@joncros/radial-dendrogram.js?v=3";
 
-            // Load the Chart
+            // Load the chart and controls
             const main = new Runtime().module(notebook, name => {
               if (name === "chart") {
                 return new Inspector(document.querySelector("#visualization"));
@@ -35,19 +35,6 @@
                 return new Inspector(document.querySelector("#remove_from_end"));
               }
             });
-
-            // Load extra controls for limiting the words displayed per relation
-            //const max = new Runtime().module(notebook, name => {
-            //  else if (name === "viewof max") {
-            //    return new Inspector(document.querySelector("#max"));
-            //  }
-            //});
-
-            //const remove_from_end = new Runtime().module(notebook, name => {
-            //  if (name === "viewof remove_from_end") {
-            //    return new Inspector(document.querySelector("#remove_from_end"));
-            //  }
-            //});
 
             //Reload chart using appropriate data
             main.redefine("data", result_dict);
@@ -75,7 +62,7 @@
 </p>
 {% endblock %}
 
-{% block legend %}
+{% block viz-controls %}
     {% if result_dict %}
         <p>
             If you wish to reduce the number of words displayed in the chart, use these controls below.

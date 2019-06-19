@@ -53,10 +53,11 @@ main.redefine("data", wordset_data);
     The source code for this chart can be found at <a href="https://observablehq.com/@joncros/bubble-chart">
     https://observablehq.com/@joncros/bubble-chart</a>.
 </p>
-{% endblock %}
-
-{% block legend %}
-    <p><strong>words displayed: {{ wordcount }}</strong></p>
+{% if wordset_data %}
+<p>
+    <strong>words displayed: {{ wordcount }}</strong>
+</p>
+{% endif %}
 {% endblock %}
 
 {% block visualization_form %}

@@ -6,3 +6,16 @@ td, th {
 tr:nth-child(even) {
   background-color: #dddddd;
 }
+
+.row {
+    display: flex;
+}
+
+.row .col {
+    display: flex;
+    align-items: stretch;
+}
+
+.row .col .panel {
+    width: 100%;
+}

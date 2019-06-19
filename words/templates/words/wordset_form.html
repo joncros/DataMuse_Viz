@@ -1,8 +1,17 @@
 {% extends "base_generic.html" %}
 
-<!--todo include note that entering a word multiple times will be reflected in occurrences?-->
+{% load crispy_forms_tags %}
 
 {% block content %}
+<p>
+    Create a list of words to use for visualizations. The site will save the list and retrieve data on each word from
+    Datamuse. If you include a word in the list multiple times, the number of occurrences of the word will be counted.
+</p>
+<p>
+    <strong>Please note that it may take a few minutes for larger lists of words to be saved. When the process
+    is complete, you will be taken to a page listing all of the words in the Word Set.</strong>
+</p>
+
 {% if form.errors %}
     {% for field in form %}
         {% for error in field.errors %}
@@ -18,9 +27,27 @@
     {% endfor %}
 {% endif %}
 
-  <form enctype="multipart/form-data" action="" method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <input type="submit" value="Submit">
-  </form>
+<form enctype="multipart/form-data" action="" method="post">
+  {% csrf_token %}
+
+    {% comment %}
+  {% for field in form %}
+    {% if not field.is_hidden %}
+    <div class="row">
+    <div class="form-group">
+        {{ field.errors }}
+        {{ field.label_tag }}
+        {{ field }}
+        {% if field.help_text %}
+            <p class="help">{{ field.help_text|safe }}</p>
+        {% endif %}
+    </div>
+    </div>
+    {% endif %}
+  {% endfor %}
+    {% endcomment %}
+
+    {% crispy form %}
+<input type="submit" value="Submit">
+</form>
 {% endblock %}

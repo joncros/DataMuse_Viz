@@ -45,8 +45,9 @@ class WordSetCreateFormTest(TestCase):
     def test_text_file_field_help_text(self):
         form = WordSetCreateForm()
         field = form.fields['text_file']
-        text = "(Optional) Upload a text file containing words (multiple words per line) to include in the set. The " \
-               "text is split into individual words (no phrases will be detected)."
+        text = "(Optional) Upload a text file containing words (multiple words per line) " \
+               "to include in the set. The text is split into individual words (no " \
+               "phrases will be detected). Punctuation (apart from hyphens) will be ignored."
         self.assertEqual(field.help_text, text)
 
     def test_text_file_upload(self):
@@ -64,7 +65,7 @@ class WordSetCreateFormTest(TestCase):
         upload_file = open('manage.py', 'rb')
         post_dict = {'name': 'test'}
         file_dict = {'text_file': InMemoryUploadedFile(
-             upload_file, 'text_file', upload_file.name, '', os.path.getsize('manage.py'), None)}
+            upload_file, 'text_file', upload_file.name, '', os.path.getsize('manage.py'), None)}
         message = "Uploaded file is not a plain text file."
         form = WordSetCreateForm(post_dict, file_dict)
         self.assertFalse(form.is_valid())
@@ -180,5 +181,3 @@ class WordSetChoiceTest(TestCase):
         form = WordSetChoice(post_dict)
         self.assertFalse(form.is_valid())
         self.assertIn(message, form.errors['__all__'])
-
-

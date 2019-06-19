@@ -136,7 +136,7 @@ class RelatedWordsFormTest(TestCase):
     def test_datamuse_connection_error(self, query_with_retryMock):
         """Tests that a ConnectionError from datamuse_json results in a ValidationError"""
         post_dict = {'word': 'walk', 'relations': ['jja']}
-        message = 'DataMuse service unavailable'
+        message = 'Datamuse service unavailable'
         query_with_retryMock.side_effect = ConnectionError(message)
         form = RelatedWordsForm(post_dict)
         self.assertFalse(form.is_valid())
@@ -150,7 +150,7 @@ class RelatedWordsFormTest(TestCase):
         add_relatedMock.side_effect = ValueError(message)
         form = RelatedWordsForm(post_dict)
         self.assertFalse(form.is_valid())
-        self.assertIn("Invalid parameter for DataMuse query: " + message, form.non_field_errors())
+        self.assertIn("Invalid parameter for Datamuse query: " + message, form.non_field_errors())
 
 
 class WordSetChoiceTest(TestCase):

@@ -1,12 +1,12 @@
-This site makes use of DataMuse to provide visualizations illustrating data about words and their relationships to other
- words. DataMuse is a RESTful API that provides access to data concerning words. More information can be found 
+This site makes use of Datamuse to provide visualizations illustrating data about words and their relationships to other
+ words. Datamuse is a RESTful API that provides access to data concerning words. More information can be found 
  <a href="http://www.datamuse.com/api/">here</a>. Currently (API version 1.1) only the English language is fully 
  supported by Datamuse; Spanish is partially supported (parameters for finding words related to the query word are not 
  supported). The site is built using Django and uses 
- <a href="https://github.com/margaret/python-datamuse">python-datamuse</a> to send queries to DataMuse. 
+ <a href="https://github.com/margaret/python-datamuse">python-datamuse</a> to send queries to Datamuse. 
  
- <strong>Word Relationships</strong> These are the types of relationships that can be used when asking DataMuse for words related to a 
- certain word, identified by the three-letter code used in the rel_[code] DataMuse parameter:
+ <strong>Word Relationships</strong> These are the types of relationships that can be used when asking Datamuse for words related to a 
+ certain word, identified by the three-letter code used in the rel_[code] Datamuse parameter:
  <div>
 <table class="fullwidth">
 <thead>

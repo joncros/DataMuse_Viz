@@ -34,8 +34,8 @@ class AddOrUpdateWordTest(TestCase):
 
     @unittest.mock.patch('words.datamuse_json.query_with_retry')
     def test_connection_error(self, query_with_retryMock):
-        query_with_retryMock.side_effect = ConnectionError('DataMuse service unavailable')
-        message = 'DataMuse service unavailable'
+        query_with_retryMock.side_effect = ConnectionError('Datamuse service unavailable')
+        message = 'Datamuse service unavailable'
         with self.assertLogs('words.datamuse_json', level='ERROR') as cm:
             result = add_or_update_word("bat")
             self.assertRegex(cm.output[0], message)
@@ -70,7 +70,7 @@ class AddRelatedTest(TestCase):
         """Tests add_related with a word that will not be found by datamuse"""
         word = "ssdfio"
         code = "jja"
-        regex = f"'{word}' not found by DataMuse, or no related words found for "
+        regex = f"'{word}' not found by Datamuse, or no related words found for "
         with self.assertRaisesRegex(ValidationError, regex):
             result = add_related(word=word, code=code)
 
@@ -83,7 +83,7 @@ class AddRelatedTest(TestCase):
 
     @unittest.mock.patch('words.datamuse_json.query_with_retry')
     def test_connection_error(self, query_with_retryMock):
-        message = 'DataMuse service unavailable'
+        message = 'Datamuse service unavailable'
         query_with_retryMock.side_effect = ConnectionError(message)
         with self.assertRaisesRegex(ConnectionError, message):
             result = add_related("bat", "jja")

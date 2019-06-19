@@ -46,10 +46,10 @@ def query_with_retry(retries: int, wait: float, **kwargs):
             result = api.words(**kwargs)
             return result
         except ValueError:
-            logger.info('DataMuse query failed.')
+            logger.info('Datamuse query failed.')
             time.sleep(wait)
     # no response after retries exhausted
-    raise ConnectionError('DataMuse service unavailable')
+    raise ConnectionError('Datamuse service unavailable')
 
 
 def decode_word(dct):
@@ -91,7 +91,7 @@ def add_or_update_word(word: str):
 
     if Word.objects.filter(name=word).exists() and Word.objects.get(name=word).datamuse_success is True:
         # word already in database and Datamuse call already successfully performed. Skip DataMuse query
-        logger.debug(f'{word} values already populated from DataMuse')
+        logger.debug(f'{word} values already populated from Datamuse')
         return Word.objects.get(name=word)
 
     # do api query, give up after 5 attempts
@@ -112,7 +112,7 @@ def add_or_update_word(word: str):
         return json.loads(result, object_hook=decode_word)
     else:
         logger.info(f'json from Datamuse: {result}')
-        logger.info(f'{word} not found by DataMuse')
+        logger.info(f'{word} not found by Datamuse')
 
 
 def add_related(word: str, code: str):
@@ -138,7 +138,7 @@ def add_related(word: str, code: str):
         relations = getattr(word_instance, f'{code}_relations')
 
         if word_attr.exists():
-            logger.debug(f'related words for word {word} and code {code} already retrieved, skipping DataMuse query')
+            logger.debug(f'related words for word {word} and code {code} already retrieved, skipping Datamuse query')
             return word_instance, relations
 
         kwargs = {
@@ -165,4 +165,4 @@ def add_related(word: str, code: str):
             return word_instance, relations
         else:
             verbose_code = Word._meta.get_field(code).verbose_name
-            raise ValidationError(f"'{word}' not found by DataMuse, or no related words found for {verbose_code}")
+            raise ValidationError(f"'{word}' not found by Datamuse, or no related words found for {verbose_code}")

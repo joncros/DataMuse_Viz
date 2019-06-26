@@ -5,7 +5,9 @@ import sys
 
 
 def main():
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'datamuse_viz.settings')
+    # use test_settings.py for django settings when running "manage.py test"
+    settings = 'datamuse_viz.test_settings' if 'test' in sys.argv else 'datamuse_viz.settings'
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', settings)
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

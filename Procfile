@@ -1,0 +1,1 @@
+web: gunicorn datamuse_viz.wsgi --log-file -

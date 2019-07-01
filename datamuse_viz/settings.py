@@ -30,17 +30,20 @@ def get_env_variable(var_name):
         raise ImproperlyConfigured(error_msg)
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = get_env_variable('SECRET_KEY')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'datamuse-viz.herokuapp.com']
 
+# Security settings recommended by py manage.py check --deploy
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_SSL_REDIRECT = True
+X_FRAME_OPTIONS = 'DENY'
 
 # Application definition
 
@@ -146,8 +149,11 @@ STATIC_URL = '/static/'
 # Redirect to home URL after login (Default redirects to /accounts/profile/)
 LOGIN_REDIRECT_URL = '/'
 
-# Log any emails sent to the console instead of sending them (for testing password reset during development)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# sender address for automatic emails (e.g. password reset) from the site
+DEFAULT_FROM_EMAIL = 'webmaster@datamuse-viz.herokuapp.com'
+
+# sender address for error message emails
+SERVER_EMAIL = 'root@datamuse-viz.herokuapp.com'
 
 # get environment variable for logging level for datamuse_viz (default 'info')
 LOGLEVEL = os.environ.get('LOGLEVEL', 'info').upper()

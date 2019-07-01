@@ -192,14 +192,14 @@ DATABASES = {
 On the line 'PASSWORD': 'wxZPAHz89GSHY', replace 'wxZPAHz89GSHY' with the password you set when installing PostgreSQL 
 on your system. 
 
-The required python packages are listed in requirements.txt. You can install these packages manually using pip; or you 
-can install all of these packages along with their dependencies using requirements-freeze.txt. It is recommended to 
+The required python packages are listed in requirements-primary.txt. You can install these packages manually using pip; 
+or you can install all of these packages along with their dependencies using requirements.txt. It is recommended to 
 first create a virtual environment using virtualenvwrapper (linux or macOS) or virtualenvwrapper-win (Windows). After 
 installing mkvirtualenv, type the following on the command line:
 <pre>mkvirtualenv datamuse_viz_env</pre>
 
 To install all dependencies at once, type:
-<pre>pip3 install --requirement requirements-freeze.txt </pre>
+<pre>pip3 install --requirement requirements.txt </pre>
 
 To work in this environment from the command line, type
 <pre>workon datamuse_viz_env</pre>

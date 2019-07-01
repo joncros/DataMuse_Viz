@@ -36,6 +36,7 @@
                         <!--Display username and logout button-->
                         <li class="navbar-text">User: {{ user.get_username }}</li>
                         <li><a href="{% url 'logout'%}?next={{request.path}}">Logout</a></li>
+                </ul>
                     {% else %}
                         <!--Show link to create account-->
                         <li><a href="{% url 'user registration' %}?next={{request.path}}">User Registration</a></li>

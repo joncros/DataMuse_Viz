@@ -47,7 +47,7 @@
   {% endfor %}
     {% endcomment %}
 
-    {% crispy form %}
+    {{ form|crispy }}
 <input type="submit" value="Submit">
 </form>
 {% endblock %}

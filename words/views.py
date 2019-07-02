@@ -231,5 +231,15 @@ class WordSetListView(generic.ListView):
     def get_context_data(self, *args, **kwargs):
         context = super(WordSetListView, self).get_context_data()
         context['navbar_wordsets'] = 'active'
+
+        # if user logged in, group wordsets by those created by user and all others
+        user = self.request.user
+        logger.debug(f'user: {user}')
+        if user.is_authenticated:
+            user_wordsets = WordSet.objects.filter(creator=user)
+            other_wordsets = WordSet.objects.exclude(creator=user)
+            context['user_wordsets'] = user_wordsets
+            context['other_wordsets'] = other_wordsets
+
         return context
 

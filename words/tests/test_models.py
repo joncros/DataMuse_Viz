@@ -128,13 +128,12 @@ class WordSetTest(TestCase):
 
     def test_object_name_with_no_creator(self):
         word_set = WordSet.objects.get(name="Test Set 2")
-        expected_object_name = f'Test Set 2 ({word_set.id})'
+        expected_object_name = 'Test Set 2'
         self.assertEqual(expected_object_name, str(word_set))
 
-    def test_unique_wordset_name_per_creator(self):
-        test_user = User.objects.get(username='testuser')
+    def test_unique_wordset_name(self):
         with self.assertRaises(IntegrityError):
-            WordSet.objects.create(name="Test Set 1", creator=test_user, description="one")
+            WordSet.objects.create(name="Test Set 1", description="one")
 
     def test_unique_word_per_wordset(self):
         word_set = WordSet.objects.get(name="Test Set 1")

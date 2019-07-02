@@ -239,15 +239,11 @@ class PartOfSpeech(models.Model):
 
 class WordSet(models.Model):
     """"A user-defined set of words that have something in common, such as appearing in a certain book."""
-    name = models.CharField(max_length=100, help_text="Enter a unique name for this set of words")
+    name = models.CharField(max_length=100, unique=True, help_text="Enter a unique name for this set of words")
     description = models.TextField(blank=True, help_text="Enter a description for this set of words")
     creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     words = models.ManyToManyField(Word, through='Membership', related_name='words', related_query_name='word',
                                    blank=True)
-
-    class Meta:
-        # for each creator, there should only be one wordset with a given name
-        constraints = [models.UniqueConstraint(fields=['name', 'creator'], name='unique_wordset_name_per_creator'), ]
 
     def get_absolute_url(self):
         """Returns the url to access a particular wordset instance."""
@@ -255,9 +251,7 @@ class WordSet(models.Model):
 
     def __str__(self):
         """String for representing the Model object"""
-        # if creator null, UniqueConstraint cannot be enforced; so identify wordset by name and id
-        # todo instead of displaying id with anonymous creator, add an int to name based on how many other wordsets with this name exist?
-        creator_string = f' ({self.id})'
+        creator_string = ''
         if self.creator is not None:
             creator_string = f' (created by {self.creator})'
         return f'{self.name}' + creator_string

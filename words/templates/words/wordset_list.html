@@ -1,15 +1,37 @@
 {% extends "base_generic.html" %}
 
 {% block content %}
-    <h1>Word Sets</h1>
+
     {% if wordset_list %}
-    <ul>
-        {% for wordset in wordset_list %}
-            <li>
-                <a href="{{ wordset.get_absolute_url }}">{{ wordset }}</a>
-            </li>
-        {% endfor %}
-    </ul>
+        {% if user.is_authenticated %}
+        <h1>My Word Sets</h1>
+        <ul>
+            {% for wordset in user_wordsets %}
+                <li>
+                    <a href="{{ wordset.get_absolute_url }}">{{ wordset.name }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+        <h1>Other Word Sets</h1>
+        <ul>
+            {% for wordset in other_wordsets %}
+                <li>
+                    <a href="{{ wordset.get_absolute_url }}">{{ wordset }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+
+        {% else %}
+        <h1>Word Sets</h1>
+        <ul>
+            {% for wordset in wordset_list %}
+                <li>
+                    <a href="{{ wordset.get_absolute_url }}">{{ wordset }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
     {% else %}
         <p>There are no Word Sets.</p>
     {% endif %}

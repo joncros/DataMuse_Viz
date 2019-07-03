@@ -14,6 +14,16 @@
         {% endfor %}
     </ul>
 
+    <h4>Charts</h4>
+        <ul>
+        <li>
+            <a href="{% url 'viz frequency'%}?id={{wordset.id}}">Word Frequencies Visualization</a>
+        </li>
+
+        <li>
+            <a href="{% url 'viz frequency scatterplot'%}?id={{wordset.id}}">Word Frequencies Scatterplot</a>
+        </li>
+        </ul>
     {% if user.is_authenticated %}
         {% if user == wordset.creator %}
             <p><a href="{% url 'wordset_delete' pk=wordset.id %}">Delete Word Set</a></p>

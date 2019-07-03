@@ -265,6 +265,13 @@ class VisualizationFrequencyTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['viz_title'], 'Word Frequencies')
 
+    def test_id_parsed_from_url(self):
+        """Tests that if id is included in the url query string, the initial value of 'word_set' in the form is set to
+        the corresponding WordSet."""
+        wordset = WordSet.objects.create(name="test")
+        response = self.client.get(f'/words/frequencies/?id={wordset.id}')
+        self.assertEqual(response.context['form'].initial['word_set'], wordset)
+
     # tests for POST
 
     def test_wordset_data_in_post(self):
@@ -312,3 +319,10 @@ class VisualizationFrequencyScatterplotTest(TestCase):
         response = self.client.get(reverse('viz frequency scatterplot'))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['viz_title'], 'Occurrences vs Frequencies Scatterplot')
+
+    def test_id_parsed_from_url(self):
+        """Tests that if id is included in the url query string, the initial value of 'word_set' in the form is set to
+        the corresponding WordSet."""
+        wordset = WordSet.objects.create(name="test")
+        response = self.client.get(f'/words/scatterplot/?id={wordset.id}')
+        self.assertEqual(response.context['form'].initial['word_set'], wordset)

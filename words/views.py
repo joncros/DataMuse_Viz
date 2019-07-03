@@ -66,8 +66,25 @@ def visualization_frequency(request):
             # json formatted for Observable bubble chart
             wordset_data = json.dumps(json_list, cls=DjangoJSONEncoder)
             context['wordset_data'] = wordset_data
+
+    # if a GET (or any other method) create a blank form
     else:
-        form = WordSetChoice()
+        # id parameter in url, when present indicates the WordSet that should be initially selected in the form
+        wordset_id = request.GET.get('id', None)
+        logger.debug(f'id from url: {wordset_id}')
+
+        if wordset_id:
+            try:
+                wordset = WordSet.objects.get(id=wordset_id)
+                logger.debug(f'Initial WordSet from url: {wordset}')
+                form = WordSetChoice(initial={'word_set': wordset})
+            except WordSet.DoesNotExist:
+                logger.info(
+                    f'WordSet id {wordset_id} passed to frequency visualization, but no WordSet '
+                    f'with this id exists.')
+                form = WordSetChoice()
+        else:
+            form = WordSetChoice()
 
     # always add form to context
     context['form'] = form
@@ -117,7 +134,21 @@ def visualization_frequency_scatterplot(request):
 
     # if a GET (or any other method) create a blank form
     else:
-        form = WordSetChoice()
+        # id parameter in url, when present indicates the WordSet that should be initially selected in the form
+        wordset_id = request.GET.get('id', None)
+        logger.debug(f'id from url: {wordset_id}')
+
+        if wordset_id:
+            try:
+                wordset = WordSet.objects.get(id=wordset_id)
+                logger.debug(f'Initial WordSet from url: {wordset_id} {wordset}')
+                form = WordSetChoice(initial={'word_set': wordset})
+            except WordSet.DoesNotExist:
+                logger.info(f'WordSet id {wordset_id} passed to frequency visualization scatterplot, but no WordSet '
+                            f'with this id exists.')
+                form = WordSetChoice()
+        else:
+            form = WordSetChoice()
 
     # always add form to context
     context['form'] = form

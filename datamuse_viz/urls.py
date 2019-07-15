@@ -39,3 +39,8 @@ urlpatterns += [
     path('accounts/', include('django.contrib.auth.urls')),  # django built-in user account views
     path('accounts/registration/', views.UserRegistration.as_view(), name='user registration')  # user creation
 ]
+
+# django-rq urls
+urlpatterns += [
+    path('django-rq/', include('django_rq.urls'))
+]

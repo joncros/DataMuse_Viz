@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'crispy_forms',
     'words.apps.WordsConfig',
+    "django_rq",
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap'
@@ -172,11 +173,21 @@ LOGGING = {
             'format': '{module} {funcName} {message}',
             'style': '{',
         },
+        "rq_console": {
+            "format": "%(asctime)s %(message)s",
+            "datefmt": "%H:%M:%S",
+        },
     },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose'
+        },
+        "rq_console": {
+            "level": "DEBUG",
+            "class": "rq.utils.ColorizingStreamHandler",
+            "formatter": "rq_console",
+            "exclude": ["%(asctime)s"],
         },
     },
     'loggers': {
@@ -187,7 +198,11 @@ LOGGING = {
         'words': {
             'handlers': ['console'],
             'level': LOGLEVEL,
-        }
+        },
+        "rq.worker": {
+            "handlers": ["rq_console"],
+            "level": "DEBUG"
+        },
     },
 }
 
@@ -200,10 +215,9 @@ DATABASES['default'].update(db_from_env)
 # https://warehouse.python.org/project/whitenoise/
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# for heroku hobby tier hosting: no in-memory cache, so used file-based cache
-CACHES = {
+RQ_QUEUES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': '/var/tmp/django_cache',
-    }
+        'URL': os.getenv('REDISTOGO_URL', 'redis://localhost:6379/0'),
+        'DEFAULT_TIMEOUT': 3600,
+    },
 }

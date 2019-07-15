@@ -2,6 +2,7 @@ Django==2.2.3
 django-crispy-forms==1.7.2
 dj-database-url==0.5.0
 django-heroku==0.3.1
+django-rq==2.1.0
 gunicorn==19.9.0
 psycopg2-binary==2.8.3
 python-datamuse==1.2.1

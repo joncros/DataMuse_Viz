@@ -60,6 +60,20 @@ class WordSetCreateFormTest(TestCase):
             form = WordSetCreateForm(post_dict, file_dict)
             self.assertTrue(form.is_valid())
 
+    def test_text_file_size_limit(self):
+        """Tests that a ValidationError is thrown by text_file field if the file is greater than 10mb"""
+        size = 10000001
+        with open("text.txt", "w") as upload_file:
+            upload_file.truncate(size)
+        with open("text.txt", "rb") as upload_file:
+            post_dict = {'name': 'test'}
+            file_dict = {'text_file': InMemoryUploadedFile(
+                upload_file, 'text_file', upload_file.name, '', os.path.getsize('text.txt'), None)}
+            form = WordSetCreateForm(post_dict, file_dict)
+            message = "Uploaded file is to large; file size cannot exceed 10 mb."
+            self.assertFalse(form.is_valid())
+            self.assertIn(message, form.errors['text_file'])
+
     def test_text_file_wrong_file_type(self):
         """Tests that a ValidationError is thrown by text_file field when the file is not text/plain"""
         upload_file = open('manage.py', 'rb')

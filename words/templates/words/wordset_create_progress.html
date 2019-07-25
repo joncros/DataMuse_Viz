@@ -1,0 +1,45 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+<p>
+    Processing words for Word Set {{ wordset }}:
+</p>
+
+<p id="status">{{ job.get_status }}</p>
+
+<p>
+    <span id="potential-1"></span> potential words to add to the Word Set
+</p>
+
+<p>
+    Words processed: <span id="processed"></span> / <span id="potential-2"></span>
+</p>
+
+<p>
+    Words recognized by Datamuse: <span id="recognized"></span>
+</p>
+
+<script>
+    var url = "{% url 'wordset_create_progress json' job_id %}";
+    var interval = setInterval(function() {
+
+        // retrieve job progress and update page
+        $.getJSON(url, function(data) {
+            if (data.status == "finished") {
+                // redirect to WordSet detail page
+                clearInterval(interval);
+                window.location.href = "{% url 'wordset-detail' wordset.pk %}";
+            } else {
+                $("#status").text(data.status);
+                var potential = data.potential_words;
+                $("#potential-1").text(potential);
+                $("#potential-2").text(potential);
+                $("#processed").text(data.processed_words);
+                $("#recognized").text(data.recognized_words);
+            }
+        })
+
+    }, 2000);
+</script>
+
+{% endblock %}

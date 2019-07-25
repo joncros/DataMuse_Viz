@@ -201,6 +201,8 @@ installing mkvirtualenv, type the following on the command line:
 To install all dependencies at once, type:
 <pre>pip3 install --requirement requirements.txt </pre>
 
+<-- todo add note on requirements-dev.txt dependencies for unit tests -->
+
 To work in this environment from the command line, type
 <pre>workon datamuse_viz_env</pre>
 If you use an IDE such as PyCharm, you also will need to set the environment to datamuse_viz_env in the ide. 

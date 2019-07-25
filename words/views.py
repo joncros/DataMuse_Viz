@@ -1,24 +1,36 @@
-import decimal
 import json
 import logging
+import uuid
 
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth.mixins import UserPassesTestMixin, AccessMixin
-from django.core.exceptions import ImproperlyConfigured
+import django_rq
+import redis
+from coverage.xmlreport import os
+from django.contrib.auth.mixins import UserPassesTestMixin
 from django.core.serializers.json import DjangoJSONEncoder
+from django.http import JsonResponse
 from django.shortcuts import render
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.views import generic
-from django.views.generic.base import ContextMixin
-from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.views.generic.edit import CreateView, DeleteView
+from rq.compat import text_type
+from rq.job import Job
+from rq.registry import StartedJobRegistry
 
-from words import datamuse_json
 from words.forms import RelatedWordsForm, WordSetCreateForm, WordSetChoice
 from words.models import WordSet, Word
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
+
+# se up django-rq queue
+redis_url = os.getenv('REDISTOGO_URL', 'redis://localhost:6379')
+redis_cursor = redis.from_url(redis_url)    # singleton Redis client
+
+# queue for running rq worker for WordSetCreateForm save
+rq_queue = django_rq.get_queue('default', connection=redis_cursor)
+
+# register to track running rq jobs
+rq_started_job_registry = StartedJobRegistry(queue=rq_queue)  # connection=redis_cursor) #, queue=rq_queue)
 
 
 def index(request):
@@ -216,10 +228,21 @@ class WordSetCreate(CreateView):
     model = WordSet
     form_class = WordSetCreateForm
 
+    def __init__(self):
+        super(WordSetCreate, self).__init__()
+
+        # id to use for django-rq job for form processing
+        self.job_id = text_type(uuid.uuid4())
+
     def get_form_kwargs(self):
         """Add request user to form kwargs"""
         kwargs = super(WordSetCreate, self).get_form_kwargs()
+
+        # pass user to form so creator can be set to user
         kwargs['user'] = self.request.user
+
+        # pass job_id for the form to use when creating a django-rq job
+        kwargs['job_id'] = self.job_id
         return kwargs
 
     def get_context_data(self, **kwargs):
@@ -228,14 +251,32 @@ class WordSetCreate(CreateView):
         return context
 
     def get_success_url(self):
-        """Return the URL to redirect to. If request has next parameter, redirect there"""
-        next_url = self.request.GET.get('next', None)
-        logger.debug(f'next_url: {next_url}')
-        if next_url:
-            return str(next_url)
-        else:
-            # Redirect to wordset-detail page for new instance
-            return self.object.get_absolute_url()
+        """Return the URL to redirect to. Redirects to page showing the progress of the WordSet creation."""
+        logger.debug(f'start, job_id: {self.job_id}')
+        return reverse('wordset_create_progress', kwargs={'pk': self.object.pk, 'job_id': self.job_id})
+
+
+def wordset_create_progress_json(request, job_id):
+    """Returns an rq job's progress (contained in job.meta) in json format."""
+    job = Job.fetch(job_id, connection=redis_cursor)
+    job.meta['status'] = job.get_status()
+    job.save_meta()
+    return JsonResponse(job.meta)
+
+
+def wordset_create_progress(request, pk, job_id):
+    """Displays the progress when processing the words for a new WordSet"""
+    wordset = WordSet.objects.get(id=pk)
+    logger.debug(f'wordset: {wordset.name}, job id: {job_id}')
+    job = Job.fetch(job_id, connection=redis_cursor)
+
+    context = {
+        'wordset': wordset,
+        'job': job,
+        'job_id': job_id,
+    }
+    
+    return render(request, 'words/wordset_create_progress.html', context)
 
 
 class WordSetDelete(UserPassesTestMixin, DeleteView):

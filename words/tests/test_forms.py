@@ -3,8 +3,7 @@ from string import punctuation
 from unittest import mock
 
 from django import forms
-from django.core.exceptions import ValidationError
-from django.core.files.uploadedfile import SimpleUploadedFile, InMemoryUploadedFile
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.test import TestCase
 
 from words.forms import RelatedWordsForm, WordSetCreateForm, WordCharField, WordFileField, WordSetChoice
@@ -12,38 +11,43 @@ from words.models import WordSet
 
 
 class WordSetCreateFormTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        # a dummy job_id to pass to the forms
+        cls.form_kwargs = {'job_id': 1}
+
     def test_correct_fields_present(self):
-        form = WordSetCreateForm()
+        form = WordSetCreateForm(self.form_kwargs)
         self.assertIn('name', form.fields)
         self.assertIn('description', form.fields)
         self.assertIn('creator', form.fields)
         self.assertIn('words', form.fields)
 
     def test_creator_field_hidden(self):
-        form = WordSetCreateForm()
+        form = WordSetCreateForm(self.form_kwargs)
         self.assertIsInstance(form.fields['creator'].widget, forms.widgets.HiddenInput)
 
     def test_words_field_help_text(self):
-        form = WordSetCreateForm()
+        form = WordSetCreateForm(self.form_kwargs)
         text = "(Optional) Type the words to include in the set (one word or phrase per line)"
         self.assertEqual(text, form.fields['words'].help_text)
 
     def test_words_field(self):
         """Test that the words field is of the correct class and strip attribute is false"""
-        form = WordSetCreateForm()
+        form = WordSetCreateForm(self.form_kwargs)
         field = form.fields['words']
         self.assertIsInstance(field, WordCharField)
         self.assertFalse(field.strip)
 
     def test_text_file_field(self):
         """Tests that the field text_file is of the correct class and is not required."""
-        form = WordSetCreateForm()
+        form = WordSetCreateForm(self.form_kwargs)
         field = form.fields['text_file']
         self.assertIsInstance(field, WordFileField)
         self.assertFalse(field.required)
 
     def test_text_file_field_help_text(self):
-        form = WordSetCreateForm()
+        form = WordSetCreateForm(self.form_kwargs)
         field = form.fields['text_file']
         text = "(Optional) Upload a text file containing words (multiple words per line) " \
                "to include in the set. The text is split into individual words (no " \
@@ -57,7 +61,7 @@ class WordSetCreateFormTest(TestCase):
             post_dict = {'name': 'test'}
             file_dict = {'text_file': InMemoryUploadedFile(
                 upload_file, 'text_file', upload_file.name, '', os.path.getsize('text.txt'), None)}
-            form = WordSetCreateForm(post_dict, file_dict)
+            form = WordSetCreateForm(post_dict, file_dict, self.form_kwargs)
             self.assertTrue(form.is_valid())
 
     def test_text_file_size_limit(self):
@@ -69,7 +73,7 @@ class WordSetCreateFormTest(TestCase):
             post_dict = {'name': 'test'}
             file_dict = {'text_file': InMemoryUploadedFile(
                 upload_file, 'text_file', upload_file.name, '', os.path.getsize('text.txt'), None)}
-            form = WordSetCreateForm(post_dict, file_dict)
+            form = WordSetCreateForm(post_dict, file_dict, self.form_kwargs)
             message = "Uploaded file is to large; file size cannot exceed 10 mb."
             self.assertFalse(form.is_valid())
             self.assertIn(message, form.errors['text_file'])
@@ -81,7 +85,7 @@ class WordSetCreateFormTest(TestCase):
         file_dict = {'text_file': InMemoryUploadedFile(
             upload_file, 'text_file', upload_file.name, '', os.path.getsize('manage.py'), None)}
         message = "Uploaded file is not a plain text file."
-        form = WordSetCreateForm(post_dict, file_dict)
+        form = WordSetCreateForm(post_dict, file_dict, self.form_kwargs)
         self.assertFalse(form.is_valid())
         self.assertIn(message, form.errors['text_file'])
 
@@ -93,7 +97,7 @@ class WordSetCreateFormTest(TestCase):
             post_dict = {'name': 'test'}
             file_dict = {'text_file': InMemoryUploadedFile(
                 upload_file, 'text_file', upload_file.name, '', os.path.getsize('text.txt'), None)}
-            form = WordSetCreateForm(post_dict, file_dict)
+            form = WordSetCreateForm(post_dict, file_dict, self.form_kwargs)
             self.assertTrue(form.is_valid())
             expected = ['Some', 'text', 'and', 'some', 'punctuation']
             self.assertListEqual(form.cleaned_data['text_file'], expected)
@@ -106,7 +110,7 @@ class WordSetCreateFormTest(TestCase):
             post_dict = {'name': 'test'}
             file_dict = {'text_file': InMemoryUploadedFile(
                 upload_file, 'text_file', upload_file.name, '', os.path.getsize('text.txt'), None)}
-            form = WordSetCreateForm(post_dict, file_dict)
+            form = WordSetCreateForm(post_dict, file_dict, self.form_kwargs)
             self.assertTrue(form.is_valid())
             expected = ['Some', 'text', 'with', 'em', 'dashes']
             self.assertListEqual(form.cleaned_data['text_file'], expected)
@@ -121,7 +125,7 @@ class WordSetCreateFormTest(TestCase):
             post_dict = {'name': 'test'}
             file_dict = {'text_file': InMemoryUploadedFile(
                 upload_file, 'text_file', upload_file.name, '', os.path.getsize('text.txt'), None)}
-            form = WordSetCreateForm(post_dict, file_dict)
+            form = WordSetCreateForm(post_dict, file_dict, self.form_kwargs)
             self.assertTrue(form.is_valid())
             expected = ['Some', 'text', 'with', 'punctuation', 'and', 'a', 'hyphenated-word']
             self.assertListEqual(form.cleaned_data['text_file'], expected)

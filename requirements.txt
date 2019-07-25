@@ -10,9 +10,8 @@ django-rq==2.1.0
 gunicorn==19.9.0
 idna==2.8
 psycopg2==2.8.3
-psycopg2-binary==2.8.3
 python-datamuse==1.2.1
-python-magic-bin==0.4.14
+python-magic==0.4.15
 pytz==2019.1
 redis==3.2.1
 requests==2.21.0

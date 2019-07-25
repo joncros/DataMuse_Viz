@@ -1,9 +1,17 @@
+import json
 import logging
+import uuid
 
+from django import http
+from fakeredis import FakeStrictRedis
 from django.contrib.auth.models import User
 from django.test import TestCase, SimpleTestCase
 from django.urls import reverse
+from rq import Queue
+from rq.job import Job
+from unittest import mock
 
+from words import views
 from words.models import WordSet, Word
 
 logger = logging.getLogger(__name__)
@@ -70,17 +78,25 @@ class WordSetCreateTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['form']['creator'].value(), test_user.id)
 
+    # todo test a job_id is passed to the form
+
     # tests for POST
 
-    def test_redirect(self):
+    # todo wordsetcreate mock django-rq, test rq?
+
+    # patch so that the job always has the same id. requires an additional arg representing the mocked function be
+    # passed to the test function
+    @mock.patch("uuid.uuid4")
+    def test_redirect(self, uuid4Mock):
+        """Tests the view redirects to wordset_create_progress with appropriate arguments"""
+        job_id = 'ad4dc76f-8712-4b9d-92e6-3c2e7c52e165'
+        uuid4Mock.return_value = uuid.UUID(job_id)
         response = self.client.post('/words/wordset/create/', {'name': 'test1', 'words': 'word\r\ntest'})
         wordset = WordSet.objects.get(name='test1')
-        self.assertRedirects(response, f'/words/wordset/{wordset.pk}')
+        self.assertRedirects(response, f'/words/wordset/create_progress/{wordset.pk}_{job_id}/')
 
-    def test_redirect_if_next_in_request(self):
-        response = self.client.post('/words/wordset/create/?next=/words/', {'name': 'test1', 'words': 'word\r\ntest'})
-        self.assertRedirects(response, '/words/')
-
+    # patch so that the view uses a mocked Redis server and the job is executed immediately in the same thread
+    @mock.patch.object(views, "rq_queue", new=Queue(is_async=False, connection=FakeStrictRedis()))
     def test_word_occurrences_counted(self):
         """Tests that if the same word appears multiple times in the words field and/or text file, the occurrences field
          in the WordSet.words relationship is properly set."""
@@ -90,7 +106,8 @@ class WordSetCreateTest(TestCase):
             upload_file.write("pizza and pizza pizza pizza")
         with open("text.txt", "rb") as upload_file:
             response = self.client.post('/words/wordset/create/',
-                                        {'name': 'test1', 'words': 'a\r\nwhat\r\nwhat\r\nand', 'text_file': upload_file})
+                                        {'name': 'test1', 'words': 'a\r\nwhat\r\nwhat\r\nand',
+                                         'text_file': upload_file})
 
             a_member = Membership.objects.get(wordset__name='test1', word__name='a')
             self.assertEqual(a_member.occurrences, 1)
@@ -103,6 +120,80 @@ class WordSetCreateTest(TestCase):
 
             pizza_member = Membership.objects.get(wordset__name='test1', word__name='pizza')
             self.assertEqual(pizza_member.occurrences, 4)
+
+
+# patch so that jobs always have the same id. requires an additional arg representing the mocked function be passed
+# to each function in the test class
+@mock.patch("uuid.uuid4", return_value=uuid.UUID('ad4dc76f-8712-4b9d-92e6-3c2e7c52e165'))
+class WordSetCreateProgressJSONTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.job_id = 'ad4dc76f-8712-4b9d-92e6-3c2e7c52e165'
+
+    def test_view_url_exists_at_desired_location(self, uuid4Mock):
+        """Tests that after posting to 'wordset_create', 'wordset_create_progress json' is accessible at the correct
+        URL and contains a JSON response."""
+        create_response = self.client.post('/words/wordset/create/', {'name': 'test1', 'words': 'word\r\ntest'})
+        self.assertEqual(create_response.status_code, 302)
+        json_response = self.client.get(f'/words/wordset/create_json/{self.job_id}/')
+        self.assertEquals(json_response.status_code, 200)
+        self.assertIsInstance(json_response, http.response.JsonResponse)
+
+    def test_view_url_accessible_by_name_and_job_id(self, uuid4Mock):
+        """Tests that after posting to 'wordset_create', 'wordset_create_progress json' is accessible by the URL name
+        (with arg job_id) and contains a JSON response."""
+        create_response = self.client.post('/words/wordset/create/', {'name': 'test1', 'words': 'word\r\ntest'})
+        self.assertEqual(create_response.status_code, 302)
+        json_response = self.client.get(reverse("wordset_create_progress json", args=[self.job_id]))
+        self.assertEquals(json_response.status_code, 200)
+        self.assertIsInstance(json_response, http.response.JsonResponse)
+
+    @mock.patch.object(views, "rq_queue", new=Queue(is_async=False, connection=FakeStrictRedis()))
+    def test_job_progress_included_in_json(self, uuid4Mock):
+        """Tests that after posting to 'wordset_create', the response at 'wordset_create_progress json' contains
+        attributes indicating the state of the job."""
+        # mocked Redis server
+        conn = FakeStrictRedis()
+
+        # replace redis connection with conn, replace the queue used by the view with a queue that uses conn
+        # and immediately runs the task in the current thread
+        with mock.patch.object(views, "rq_queue", new=Queue(is_async=False, connection=conn)):
+            with mock.patch.object(views, "redis_cursor", new=conn):
+                self.client.post('/words/wordset/create/', {'name': 'test1', 'words': 'word\r\ntest'})
+                job = Job.fetch(self.job_id, connection=conn)
+                logger.info(f'job {job}, connection {job.connection}')
+                logger.info(f'status {job.get_status()}, meta {job.meta}')
+                response = self.client.get(reverse("wordset_create_progress json", args=[self.job_id]))
+                content = json.loads(response.content)
+                self.assertIn('status', content)
+                self.assertIn('potential_words', content)
+                self.assertIn('processed_words', content)
+                self.assertIn('recognized_words', content)
+
+
+# patch so that jobs always have the same id. requires an additional arg representing the mocked function be passed
+# to each function in the test class
+# patch so that the view uses a mocked Redis server and the job is executed immediately in the same thread
+@mock.patch("uuid.uuid4", return_value=uuid.UUID('ad4dc76f-8712-4b9d-92e6-3c2e7c52e165'))
+@mock.patch.object(views, "rq_queue", new=Queue(is_async=False, connection=FakeStrictRedis()))
+class WordSetCreateProgressTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.job_id = 'ad4dc76f-8712-4b9d-92e6-3c2e7c52e165'
+
+    def test_view_url_exists_at_desired_location(self, uuid4Mock):
+        """Tests that after posting to 'wordset_create', 'wordset_create_progress' is accessible at the correct URL"""
+        create_response = self.client.post('/words/wordset/create/', {'name': 'test1', 'words': 'word\r\ntest'})
+        wordset = WordSet.objects.get(name="test1")
+        progress_response = self.client.post(f'/words/wordset/create_progress/{wordset.pk}_{self.job_id}/')
+        self.assertEqual(progress_response.status_code, 200)
+
+    def test_view_url_accessible_by_name(self, uuid4Mock):
+        """Tests that after posting to 'wordset_create', 'wordset_create_progress' is accessible by the URL name."""
+        create_response = self.client.post('/words/wordset/create/', {'name': 'test1', 'words': 'word\r\ntest'})
+        wordset = WordSet.objects.get(name="test1")
+        progress_response = self.client.get(reverse("wordset_create_progress", args=[wordset.pk, self.job_id]))
+        self.assertEqual(progress_response.status_code, 200)
 
 
 class WordSetDetailViewTest(TestCase):

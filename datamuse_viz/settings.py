@@ -33,22 +33,46 @@ def get_env_variable(var_name):
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = get_env_variable('SECRET_KEY')
 
-DEBUG = False
+DEBUG = os.environ.get('DEBUG', False)    # DEBUG is False unless set by environment variable
+
+# Set environment var to True when using 'heroku local' on a local machine (disables production security settings)
+LOCAL = os.environ.get('LOCAL', False)
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'datamuse-viz.herokuapp.com']
 
-# Security settings recommended by py manage.py check --deploy
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_SSL_REDIRECT = True
-X_FRAME_OPTIONS = 'DENY'
+if LOCAL:
+    # Log any emails sent to the console instead of sending them (for testing password reset during development)
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-# Security settings recommended by py manage.py check --deploy
-SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_BROWSER_XSS_FILTER = True
-X_FRAME_OPTIONS = 'DENY'
+    # add additional allowed host from .env file (may be needed to run site from a virtual machine)
+    # this would be needed to run site from a virtual machine if you wish to access it from a browser on the host os
+    host = os.environ.get('ALLOWED_HOST', None)
+    if host:
+        ALLOWED_HOSTS += [host]
+
+if not LOCAL:
+    # Security settings recommended by py manage.py check --deploy to use in production
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_SSL_REDIRECT = True
+    X_FRAME_OPTIONS = 'DENY'
+
+    # email settings
+    # sender address for automatic emails (e.g. password reset) from the site
+    DEFAULT_FROM_EMAIL = 'webmaster@datamuse-viz.herokuapp.com'
+
+    # sender address for error message emails
+    SERVER_EMAIL = 'root@datamuse-viz.herokuapp.com'
+
+    # settings for sending email using heroku sendgrid add-on
+    SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
+    EMAIL_HOST = 'smtp.sendgrid.net'
+    EMAIL_HOST_USER = 'apikey'
+    EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
 
 # Application definition
 
@@ -155,12 +179,6 @@ STATIC_URL = '/static/'
 # Redirect to home URL after login (Default redirects to /accounts/profile/)
 LOGIN_REDIRECT_URL = '/'
 
-# sender address for automatic emails (e.g. password reset) from the site
-DEFAULT_FROM_EMAIL = 'webmaster@datamuse-viz.herokuapp.com'
-
-# sender address for error message emails
-SERVER_EMAIL = 'root@datamuse-viz.herokuapp.com'
-
 # get environment variable for logging level for datamuse_viz (default 'info')
 LOGLEVEL = os.environ.get('LOGLEVEL', 'info').upper()
 
@@ -221,3 +239,5 @@ RQ_QUEUES = {
         'DEFAULT_TIMEOUT': 3600,
     },
 }
+
+# todo set email to send admin emails to?

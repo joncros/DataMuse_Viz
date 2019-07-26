@@ -1,10 +1,12 @@
 {% extends "base_generic.html" %}
 
 {% block content %}
-    <h1>WordSet: {{ wordset }}</h1>
+    <h1>Word Set: {{ wordset }}</h1>
 
     <h4>Description:</h4>
     <p>{{ wordset.description }}</p>
+
+    <h4>Number of Words: {{ wordset.words.count }}</h4>
 
     <h4>Words</h4>
 

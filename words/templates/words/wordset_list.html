@@ -8,7 +8,7 @@
         <ul>
             {% for wordset in user_wordsets %}
                 <li>
-                    <a href="{{ wordset.get_absolute_url }}">{{ wordset.name }}</a>
+                    <a href="{{ wordset.get_absolute_url }}">{{ wordset.name }}</a> ({{ wordset.words.count}} words)
                 </li>
             {% endfor %}
         </ul>

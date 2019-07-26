@@ -240,6 +240,19 @@ class WordSetDetailViewTest(TestCase):
         response = self.client.get(reverse('wordset-detail', args=[wordset.pk]))
         self.assertContains(response, f'<a href="/words/wordset/{wordset.pk}/delete/">Delete Word Set</a>', html=True)
 
+    def test_wordset_context_includes_words_missing_data(self):
+        """Tests that the context includes a QuerySet of the words in the WordSet for which datamuse_success is False"""
+        wordset = WordSet.objects.get(name="test1")
+        wordset.words.add(
+            Word.objects.create(name="web", datamuse_success=False),
+            Word.objects.create(name="site", datamuse_success=False)
+        )
+        response = self.client.get(wordset.get_absolute_url())
+        self.assertIn('words_missing_data', response.context)
+        words_missing_data = response.context['words_missing_data']
+        self.assertTrue(words_missing_data.filter(name="web").exists())
+        self.assertTrue(words_missing_data.filter(name="site").exists())
+
 
 class WordSetDeleteTest(TestCase):
     @classmethod

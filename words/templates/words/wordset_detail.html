@@ -8,6 +8,38 @@
 
     <h4>Number of Words: {{ wordset.words.count }}</h4>
 
+    {% if user.is_authenticated %}
+        {% if user == wordset.creator %}
+            <p><a href="{% url 'wordset_delete' pk=wordset.id %}">Delete Word Set</a></p>
+        {% endif %}
+    {% endif %}
+
+    <h4>Charts</h4>
+        <ul>
+            <li>
+                <a href="{% url 'viz frequency'%}?id={{wordset.id}}">Word Frequencies Visualization</a>
+            </li>
+
+            <li>
+                <a href="{% url 'viz frequency scatterplot'%}?id={{wordset.id}}">Word Frequencies Scatterplot</a>
+            </li>
+        </ul>
+
+
+    {% if words_missing_data %}
+    <h4>Words Missing Data</h4>
+
+    <p>
+        These words have no data because Datamuse did not respond when it was queried for the data.
+    </p>
+
+    <ul>
+        {% for word in words_missing_data %}
+            <li>{{ word.name }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
     <h4>Words</h4>
 
     <ul>
@@ -15,21 +47,5 @@
             <li>{{ membership.word.name }}, occurrences: {{ membership.occurrences }}</li>
         {% endfor %}
     </ul>
-
-    <h4>Charts</h4>
-        <ul>
-        <li>
-            <a href="{% url 'viz frequency'%}?id={{wordset.id}}">Word Frequencies Visualization</a>
-        </li>
-
-        <li>
-            <a href="{% url 'viz frequency scatterplot'%}?id={{wordset.id}}">Word Frequencies Scatterplot</a>
-        </li>
-        </ul>
-    {% if user.is_authenticated %}
-        {% if user == wordset.creator %}
-            <p><a href="{% url 'wordset_delete' pk=wordset.id %}">Delete Word Set</a></p>
-        {% endif %}
-    {% endif %}
 
 {% endblock %}

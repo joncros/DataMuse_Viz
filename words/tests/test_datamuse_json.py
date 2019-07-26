@@ -39,7 +39,8 @@ class AddOrUpdateWordTest(TestCase):
         with self.assertLogs('words.datamuse_json', level='ERROR') as cm:
             result = add_or_update_word("bat")
             self.assertRegex(cm.output[0], message)
-            self.assertIsNone(result)
+            self.assertTrue(Word.objects.filter(name="bat").exists())
+            self.assertFalse(result.datamuse_success)
 
 
 class AddRelatedTest(TestCase):

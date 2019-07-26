@@ -210,6 +210,11 @@ def visualization_related_words(request):
 class WordSetDetailView(generic.DetailView):
     model = WordSet
 
+    def get_context_data(self, **kwargs):
+        context = super(WordSetDetailView, self).get_context_data()
+        context['words_missing_data'] = self.object.words.filter(datamuse_success=False)
+        return context
+
 
 class WordSetCreate(CreateView):
     """View to create a new WordSet"""

@@ -57,6 +57,7 @@ def decode_word(dct):
     if not dct:
         raise ValueError("Invalid parameter: empty json")
     else:
+        # get_or_create returns tuple (object, boolean) where the boolean indicates if a new object was created
         word = Word.objects.get_or_create(name=dct['word'])[0]
 
         # update word to indicate successful DataMuse query
@@ -91,7 +92,7 @@ def add_or_update_word(word: str):
 
     if Word.objects.filter(name=word).exists() and Word.objects.get(name=word).datamuse_success is True:
         # word already in database and Datamuse call already successfully performed. Skip DataMuse query
-        logger.debug(f'{word} values already populated from Datamuse')
+        # logger.debug(f'{word} values already populated from Datamuse')
         return Word.objects.get(name=word)
 
     # do api query, give up after 5 attempts
@@ -99,9 +100,11 @@ def add_or_update_word(word: str):
         result = query_with_retry(5, 1.0, sp=word, md='dpf', max=1)
     except ConnectionError as e:
         logger.error(e)
-        return None
+        # create word instance with datamuse_success=False and other fields blank, or return the existing instance
+        return Word.objects.get_or_create(name=word)[0]
 
     # check if result is not empty and the entry is a word that exactly matches the parameter
+    # todo match result if it is same as word but with - in it? match if plural?
     if result and result[0]['word'] == word:
         # convert result to string that json.loads can read
         # result is a list (of size one because api parameter max=1) of json objects holding data concerning the word

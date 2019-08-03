@@ -9,7 +9,7 @@ django-heroku==0.3.1
 django-rq==2.1.0
 gunicorn==19.9.0
 idna==2.8
-psycopg2==2.8.3
+psycopg2-binary==2.8.3
 python-datamuse==1.2.1
 python-magic==0.4.15
 pytz==2019.1

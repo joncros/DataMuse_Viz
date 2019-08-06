@@ -107,6 +107,7 @@ illustrating this data. The site was built using django.
 </tr>
 </tbody>
 </table>
+</div>
  
  <strong>Format of Datamuse results:</strong>
  
@@ -166,17 +167,25 @@ English text according to Google Books Ngrams ("f:...").
 
 <strong>Running the site locally</strong>
 
-First you must install Python 3.7 and the database system PostgreSQL (version 11).
+First you must install Python 3.7 and the database system PostgreSQL (version 11). After installing PostgreSQL, you will 
+need to create a new database. Open pgAdminIII and create a new database with the name "datamuse_words" and user 
+"postgres".
 
-Then clone the dev branch of datamuse_viz and checkout the dev branch:
+Then clone datamuse_viz:
 <pre>
 git clone git@github.com:joncros/DataMuse_Viz.git
 cd datamuse_viz
-git checkout dev
+<!--git checkout dev-->
 </pre>
 
-After installing PostgreSQL, you will need to create a new database. Open pgAdminIII and create a new database with the 
-name "datamuse_words" and user "postgres". Then open the datamuse-viz file settings.py and look for this section:
+<strong>branch 'dev'</strong>
+
+The version of the site on the branch "dev" is mostly up to date, but is missing specific configuration settings needed 
+for running the site in production. To run this branch, run:
+<pre>
+git checkout dev
+</pre>
+Then to complete setting up PostgreSQL, open the datamuse-viz file settings.py and look for this section:
 <pre>
 DATABASES = {
     'default': {
@@ -190,7 +199,38 @@ DATABASES = {
 }
 </pre>
 On the line 'PASSWORD': 'wxZPAHz89GSHY', replace 'wxZPAHz89GSHY' with the password you set when installing PostgreSQL 
-on your system. 
+on your system. (If you are on linux, PostgreSQL may be pre-installed on your system without a password, in which case 
+you will need to set the password.)
+
+<strong>branch 'master'</strong>
+
+The version of the site on the master branch is configured to work on the Heroku platform. It also uses redis-queue to 
+offload longer running tasks in a separate process. Redis-queue is not supported in Windows, so to run the master branch 
+you would need to run it from linux (Ubuntu 18 is suggested, since this is the OS that Heroku uses) or from Windows 10 
+WSL (Windows Subsystem for Linux).
+
+To run the master branch, type
+<pre>
+git checkout master
+</pre>
+on the command line. Then create a new text file named .env and add the following lines to it:
+<pre>
+DATABASE_URL="postgres://postgres:password@localhost/datamuse_words"
+DEBUG=True
+LOCAL=True
+LOGLEVEL=DEBUG
+SECRET_KEY="secret"
+</pre>
+replacing "password" in the first line with the password you set when installing PostgreSQL. (If you are on linux, 
+PostgreSQL may be pre-installed on your system without a password, in which case you will need to set the password.)
+<!--todo describe optional line ADDITIONAL_HOST in .env?-->
+
+Then install the packages listed in requirements-dev.txt (currently, only fakeredis) that are required to run unit 
+tests.
+
+Then, you need to install <a href="https://devcenter.heroku.com/articles/heroku-cli">Heroku CLI</a>.
+
+<strong>The following additional setup steps apply to either branch:</strong>
 
 The required python packages are listed in requirements-primary.txt. You can install these packages manually using pip; 
 or you can install all of these packages along with their dependencies using requirements.txt. It is recommended to 
@@ -209,9 +249,15 @@ If you use an IDE such as PyCharm, you also will need to set the environment to 
 Instructions to do this in PyCharm are found 
 <a href="https://www.jetbrains.com/help/pycharm/creating-virtual-environment.html">here</a>.
 
-You can run the automated tests with the command (substituting py with python3 when using linux)
+To run the unit tests, type
 <pre>py manage.py test</pre>
 
-To run the server on your local machine, type
+If you are on the dev branch, to run the server on your local machine, type
 <pre>py manage.py runserver</pre>
 and then visit http://127.0.0.1:8000 in your web browser to view the site.
+
+If you are on the master branch, type
+<pre>heroku local</pre>
+and then visit http://127.0.0.1:5000 in your web browser to view the site.
+
+<!--todo section on running master from a virtual machine?-->

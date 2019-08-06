@@ -127,6 +127,8 @@ def visualization_frequency_scatterplot(request):
             if form.cleaned_data['frequency_lt']:
                 queryset = queryset.filter(word__frequency__lt=form.cleaned_data['frequency_lt'])
 
+            # todo fields to limit displayed words by number of occurrences
+
             logger.debug(queryset)
 
             # objects to pass to D3
@@ -217,6 +219,10 @@ def visualization_related_words(request):
     context['form'] = form
 
     return render(request, 'words/visualization_related_words.html', context)
+
+
+# todo related words dendrogram that uses a single relation and branches out (ie for synonyms: display synonyms of the
+# chosen word as well as the synonyms of each synonym
 
 
 class WordSetDetailView(generic.DetailView):

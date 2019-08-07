@@ -55,7 +55,7 @@ INSTALLED_APPS = [
     'words.apps.WordsConfig',
 ]
 
-CRISPY_TEMPLATE_PACK = 'bootstrap'
+CRISPY_TEMPLATE_PACK = 'bootstrap3'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

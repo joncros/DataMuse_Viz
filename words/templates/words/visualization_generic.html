@@ -3,7 +3,6 @@
 {% block title %}Visualization: {{ viz_title }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
     <div class="panel-group">
 
         <!--Row 1: Visualization chart, text and additional controls-->
@@ -32,7 +31,7 @@
         </div>
 
         <!--Row 2: Input Form-->
-        <div class="row" class="col-lg-12 col-md-12 col-sm-12">
+        <div class="row">
             <div class="panel panel-default col-lg-12 col-md-12 col-sm-12">
                 <div class="panel-body">
                     {% block visualization_form %}
@@ -42,5 +41,4 @@
             </div>
         </div>
     </div>
-</div>
 {% endblock %}

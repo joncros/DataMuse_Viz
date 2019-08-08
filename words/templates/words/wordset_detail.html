@@ -25,6 +25,17 @@
             </li>
         </ul>
 
+    {% if wordset.unrecognized_words %}
+    <p>
+        These words were not recognized by Datamuse when the Word Set was created (a sequence of letters and numbers may
+        be a numeric escape sequence that is equivalent to a character that is not plain text; such as xa9 for the
+        copyright symbol):
+    </p>
+
+    <p style="margin-left: 40px">
+        {{ wordset.unrecognized_words|safe }}
+    </p>
+    {% endif %}
 
     {% if words_missing_data %}
     <h4>Words Missing Data</h4>

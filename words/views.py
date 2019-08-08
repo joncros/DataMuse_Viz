@@ -223,6 +223,7 @@ class WordSetDetailView(generic.DetailView):
     def get_context_data(self, **kwargs):
         context = super(WordSetDetailView, self).get_context_data()
         context['words_missing_data'] = self.object.words.filter(datamuse_success=False)
+        context['memberships_ordered_by_name'] = self.object.membership_set.order_by("word__name")
         return context
 
 

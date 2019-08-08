@@ -54,7 +54,7 @@
     <h4>Words</h4>
 
     <ul>
-        {% for membership in wordset.membership_set.all %}
+        {% for membership in memberships_ordered_by_name %}
             <li>{{ membership.word.name }}, occurrences: {{ membership.occurrences }}</li>
         {% endfor %}
     </ul>

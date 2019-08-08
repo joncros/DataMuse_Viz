@@ -53,10 +53,16 @@
 
     <h4>Words</h4>
 
-    <ul>
+    <table>
+        <thead>
+            <th>Word</th>
+            <th>Occurrences</th>
+        </thead>
         {% for membership in memberships_ordered_by_name %}
-            <li>{{ membership.word.name }}, occurrences: {{ membership.occurrences }}</li>
+        <tr>
+            <td align=left>{{ membership.word.name }}</td> <td align=right>{{ membership.occurrences }}</td>
+        </tr>
         {% endfor %}
-    </ul>
+    </table>
 
 {% endblock %}

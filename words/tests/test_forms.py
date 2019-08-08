@@ -6,7 +6,8 @@ from django import forms
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.test import TestCase
 
-from words.forms import RelatedWordsForm, WordSetCreateForm, WordCharField, WordFileField, WordSetChoice
+from words.forms import RelatedWordsForm, WordSetCreateForm, WordCharField, WordFileField, WordSetChoice, \
+    ScatterplotWordSetChoice
 from words.models import WordSet
 
 
@@ -195,7 +196,55 @@ class WordSetChoiceTest(TestCase):
         lt_value = 20
         word_set = WordSet.objects.create(name='test')
         message = "frequency less than field must be greater than frequency greater than field"
-        post_dict = {'word_set': word_set, 'creator': '', 'frequency_gt': gt_value, 'frequency_lt': lt_value}
+        post_dict = {'word_set': word_set, 'frequency_gt': gt_value, 'frequency_lt': lt_value}
         form = WordSetChoice(post_dict)
+        self.assertFalse(form.is_valid())
+        self.assertIn(message, form.errors['__all__'])
+
+
+class ScatterplotWordSetChoiceTest(TestCase):
+    def test_correct_fields_present(self):
+        form = ScatterplotWordSetChoice()
+        self.assertIn('word_set', form.fields)
+        self.assertIn('frequency_gt', form.fields)
+        self.assertIn('frequency_lt', form.fields)
+        self.assertIn('occurrences_gt', form.fields)
+        self.assertIn('occurrences_lt', form.fields)
+
+    def test_gt_and_lt_fields_optional(self):
+        form = ScatterplotWordSetChoice()
+        self.assertFalse(form.fields['frequency_gt'].required)
+        self.assertFalse(form.fields['frequency_lt'].required)
+        self.assertFalse(form.fields['occurrences_gt'].required)
+        self.assertFalse(form.fields['occurrences_lt'].required)
+
+    def test_field_labels(self):
+        form = ScatterplotWordSetChoice()
+        frequency_gt_label = "Only show words with frequency greater than"
+        frequency_lt_label = "Only show words with frequency less than"
+        occurrences_gt_label = "Only show words with occurrences greater than"
+        occurrences_lt_label = "Only show words with occurrences less than"
+        self.assertEqual(form.fields['frequency_gt'].label, frequency_gt_label)
+        self.assertEqual(form.fields['frequency_lt'].label, frequency_lt_label)
+        self.assertEqual(form.fields['occurrences_gt'].label, occurrences_gt_label)
+        self.assertEqual(form.fields['occurrences_lt'].label, occurrences_lt_label)
+
+    def test_invalid_if_frequency_gt_greater_than_frequency_lt(self):
+        gt_value = 1000
+        lt_value = 20
+        word_set = WordSet.objects.create(name='test1')
+        message = "frequency less than field must be greater than frequency greater than field"
+        post_dict = {'word_set': word_set, 'frequency_gt': gt_value, 'frequency_lt': lt_value}
+        form = ScatterplotWordSetChoice(post_dict)
+        self.assertFalse(form.is_valid())
+        self.assertIn(message, form.errors['__all__'])
+
+    def test_invalid_if_occurrences_gt_greater_than_occurrences_lt(self):
+        gt_value = 10
+        lt_value = 2
+        word_set = WordSet.objects.create(name='test2')
+        message = "occurrences less than field must be greater than occurrences greater than field"
+        post_dict = {'word_set': word_set, 'occurrences_gt': gt_value, 'occurrences_lt': lt_value}
+        form = ScatterplotWordSetChoice(post_dict)
         self.assertFalse(form.is_valid())
         self.assertIn(message, form.errors['__all__'])

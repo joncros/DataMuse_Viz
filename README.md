@@ -249,6 +249,9 @@ If you use an IDE such as PyCharm, you also will need to set the environment to 
 Instructions to do this in PyCharm are found 
 <a href="https://www.jetbrains.com/help/pycharm/creating-virtual-environment.html">here</a>.
 
+Then run the database migrations that create the database tables. (Substitute python for py when on linux)
+<pre>py manage.py migrate</pre>
+
 To run the unit tests, type
 <pre>py manage.py test</pre>
 

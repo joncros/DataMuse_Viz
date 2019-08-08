@@ -19,3 +19,10 @@ tr:nth-child(even) {
 .row .col .panel {
     width: 100%;
 }
+
+.form-group {
+    display: flex;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    margin-bottom: 5px;
+}

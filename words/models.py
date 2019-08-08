@@ -245,6 +245,9 @@ class WordSet(models.Model):
     words = models.ManyToManyField(Word, through='Membership', related_name='words', related_query_name='word',
                                    blank=True)
 
+    # string holding the words that are not recognized by Datamuse during WordSet creation
+    unrecognized_words = models.TextField(blank=True)
+
     def get_absolute_url(self):
         """Returns the url to access a particular wordset instance."""
         return reverse('wordset-detail', args=[str(self.id)])

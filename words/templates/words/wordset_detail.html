@@ -25,27 +25,67 @@
             </li>
         </ul>
 
+    {% if wordset.unrecognized_words %}
+     <div class="panel-group">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <a data-toggle="collapse" href="#collapse1">
+                        Words not recognized by Datamuse when the Word Set was created (click here to show or hide)
+                    </a>
+                 </h3>
+            </div>
+        <div id="collapse1" class="panel-collapse collapse">
+          <div class="panel-body">
+              <p>
+                  (a sequence of letters and numbers may be a numeric escape sequence that is equivalent to a character
+                  that is not plain text; such as xa9 for the copyright symbol):
+              </p>
+
+              {{ wordset.unrecognized_words|safe }}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
 
     {% if words_missing_data %}
-    <h4>Words Missing Data</h4>
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title">
+                <a data-toggle="collapse" href="#collapse2">
+                    Words missing data (click here to show or hide)
+                </a>
+             </h3>
+        </div>
+        <div id="collapse2" class="panel-collapse collapse">
+            <div class="panel-body">
+                <p>
+                    These words have no data because Datamuse did not respond when it was queried for the data.
+                </p>
 
-    <p>
-        These words have no data because Datamuse did not respond when it was queried for the data.
-    </p>
-
-    <ul>
-        {% for word in words_missing_data %}
-            <li>{{ word.name }}</li>
-        {% endfor %}
-    </ul>
+                <ul>
+                    {% for word in words_missing_data %}
+                    <li>{{ word.name }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+         </div>
+    </div>
     {% endif %}
 
     <h4>Words</h4>
 
-    <ul>
-        {% for membership in wordset.membership_set.all %}
-            <li>{{ membership.word.name }}, occurrences: {{ membership.occurrences }}</li>
+    <table>
+        <thead>
+            <th>Word</th>
+            <th>Occurrences</th>
+        </thead>
+        {% for membership in memberships_ordered_by_name %}
+        <tr>
+            <td align=left>{{ membership.word.name }}</td> <td align=right>{{ membership.occurrences }}</td>
+        </tr>
         {% endfor %}
-    </ul>
+    </table>
 
 {% endblock %}

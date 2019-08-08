@@ -16,7 +16,7 @@ from rq.compat import text_type
 from rq.job import Job
 from rq.registry import StartedJobRegistry
 
-from words.forms import RelatedWordsForm, WordSetCreateForm, WordSetChoice
+from words.forms import RelatedWordsForm, WordSetCreateForm, WordSetChoice, ScatterplotWordSetChoice
 from words.models import WordSet, Word
 
 # Get an instance of a logger
@@ -112,7 +112,7 @@ def visualization_frequency_scatterplot(request):
     }
 
     if request.method == 'POST':
-        form = WordSetChoice(request.POST)
+        form = ScatterplotWordSetChoice(request.POST)
 
         if form.is_valid():
             set_instance = form.cleaned_data['word_set']
@@ -127,7 +127,11 @@ def visualization_frequency_scatterplot(request):
             if form.cleaned_data['frequency_lt']:
                 queryset = queryset.filter(word__frequency__lt=form.cleaned_data['frequency_lt'])
 
-            # todo fields to limit displayed words by number of occurrences
+            # apply limits on word occurrences (if any)
+            if form.cleaned_data['occurrences_gt']:
+                queryset = queryset.filter(occurrences__gt=form.cleaned_data['occurrences_gt'])
+            if form.cleaned_data['occurrences_lt']:
+                queryset = queryset.filter(occurrences__lt=form.cleaned_data['occurrences_lt'])
 
             logger.debug(queryset)
 
@@ -156,13 +160,13 @@ def visualization_frequency_scatterplot(request):
             try:
                 wordset = WordSet.objects.get(id=wordset_id)
                 logger.debug(f'Initial WordSet from url: {wordset_id} {wordset}')
-                form = WordSetChoice(initial={'word_set': wordset})
+                form = ScatterplotWordSetChoice(initial={'word_set': wordset})
             except WordSet.DoesNotExist:
                 logger.info(f'WordSet id {wordset_id} passed to frequency visualization scatterplot, but no WordSet '
                             f'with this id exists.')
-                form = WordSetChoice()
+                form = ScatterplotWordSetChoice()
         else:
-            form = WordSetChoice()
+            form = ScatterplotWordSetChoice()
 
     # always add form to context
     context['form'] = form
@@ -231,6 +235,7 @@ class WordSetDetailView(generic.DetailView):
     def get_context_data(self, **kwargs):
         context = super(WordSetDetailView, self).get_context_data()
         context['words_missing_data'] = self.object.words.filter(datamuse_success=False)
+        context['memberships_ordered_by_name'] = self.object.membership_set.order_by("word__name")
         return context
 
 

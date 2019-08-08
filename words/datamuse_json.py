@@ -153,7 +153,7 @@ def add_related(word: str, code: str):
         if result:
             for item in result:
                 # get the word's score value (it's relevance compared to other words in the query)
-                score = item['score']
+                score = item.get('score', 0)
 
                 # convert item to string that json.loads can read
                 item = json.dumps(item)

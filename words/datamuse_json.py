@@ -116,6 +116,7 @@ def add_or_update_word(word: str):
     else:
         logger.info(f'json from Datamuse: {result}')
         logger.info(f'{word} not found by Datamuse')
+        return None
 
 
 def add_related(word: str, code: str):
@@ -132,7 +133,12 @@ def add_related(word: str, code: str):
         word = word.lower()
         code_param = "rel_" + code  # parameter used by python-datamuse
 
-        word_instance = Word.objects.get_or_create(name=word)[0]
+        word_instance = add_or_update_word(word)
+        if not word_instance:
+            raise ValidationError(
+                    'word "%(word)s" is not recognized by Datamuse',
+                    params={'word': word},
+                )
 
         # the related word field for the word
         word_attr = getattr(word_instance, code)

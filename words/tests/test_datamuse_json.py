@@ -69,14 +69,11 @@ class AddRelatedTest(TestCase):
 
     def test_word_not_found_by_datamuse(self):
         """Tests add_related with a word that will not be found by datamuse"""
-        # disabled for now: add_related no longer throws ValidationError
-        # todo rewrite this whe add_related response to unrecognized words is rewritten
-        pass
-        # word = "ssdfio"
-        # code = "jja"
-        # regex = f'No related words found for word "{word}" for the chosen relations'
-        # with self.assertRaisesRegex(ValidationError, regex):
-        #     result = add_related(word=word, code=code)
+        word = "ssdfio"
+        code = "jja"
+        regex = f'word "{word}" is not recognized by Datamuse'
+        with self.assertRaisesRegex(ValidationError, regex):
+            add_related(word=word, code=code)
 
     def test_invalid_code_parameter(self):
         word = "test"

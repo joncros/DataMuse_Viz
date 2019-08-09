@@ -184,21 +184,27 @@ def visualization_related_words(request):
             result_dict = {
                 "name": instance.name,
                 "children": [
-                    {
-                        "name":
-                            Word._meta.get_field(code).verbose_name,
-                        "children": [
-                            {
-                                "name": relation.related_word.name,
-                                "score": relation.score
-                            }
-                            for relation in
-                            results[code].order_by("-score")
-                            ]
-                    }
-                    for code in codes
+                    # list that will hold a dictionary (will be read by js as an object) for each relationship type
                 ]
             }
+
+            for code in codes:
+                verbose_code = Word._meta.get_field(code).verbose_name
+                if code in results:
+                    result_dict["children"].append(
+                        {
+                            "name":
+                                verbose_code,
+                            "children": [
+                                # list of all the words related by this relationship type and the associated score
+                                {
+                                    "name": relation.related_word.name,
+                                    "score": relation.score
+                                }
+                                for relation in results[code].order_by("-score")
+                                ]
+                        }
+                    )
 
             context['root_word'] = instance.name
             context['result_dict'] = result_dict

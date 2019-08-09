@@ -9,7 +9,7 @@ from django.test import TestCase
 
 from words.forms import RelatedWordsForm, WordSetCreateForm, WordCharField, WordFileField, WordSetChoice, \
     ScatterplotWordSetChoice
-from words.models import WordSet
+from words.models import WordSet, Word
 
 
 class WordSetCreateFormTest(TestCase):
@@ -166,6 +166,43 @@ class RelatedWordsFormTest(TestCase):
         form = RelatedWordsForm(post_dict)
         self.assertFalse(form.is_valid())
         self.assertIn("Invalid parameter for Datamuse query: " + message, form.non_field_errors())
+
+    @mock.patch('words.datamuse_json.add_related')
+    def test_datamuse_query_result_none(self, add_relatedMock):
+        """Tests there is a non-field error when no related words are returned by Datamuse"""
+        word = 'walk'
+        word_instance = Word.objects.get_or_create(name="walk")[0]
+        post_dict = {'word': word, 'relations': ['jja']}
+        add_relatedMock.return_value = (
+            word_instance,
+            word_instance.jja.none()        # an empty set of words
+        )
+        message = f'No related words found for word "{word}" for the chosen relations'
+        form = RelatedWordsForm(post_dict)
+        self.assertFalse(form.is_valid())
+        self.assertIn(message, form.non_field_errors())
+
+    @mock.patch('words.datamuse_json.add_related')
+    def test_datamuse_some_relations_return_empty_results(self, add_relatedMock):
+        """Tests that a relation code is omitted from the result dict if there are no results for that relation."""
+        word = 'walk'
+        codes = ['jja', 'jjb']
+        word_instance = Word.objects.get_or_create(name=word)[0]
+        jja_word = Word.objects.get_or_create(name="hike")[0]
+        word_instance.jja.add(jja_word)
+        word_instance.save()
+        values = {'jja': (word_instance, word_instance.jja), 'jjb': (word_instance, word_instance.jjb)}
+
+        def side_effect(*args):
+            return values[args[1]]
+
+        add_relatedMock.side_effect = side_effect
+
+        post_dict = {'word': word, 'relations': codes}
+        form = RelatedWordsForm(post_dict)
+        self.assertTrue(form.is_valid())
+        self.assertIn('jja', form.cleaned_data['results'])
+        self.assertNotIn('jjb', form.cleaned_data['results'])
 
 
 class WordSetChoiceTest(TestCase):

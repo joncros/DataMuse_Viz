@@ -165,7 +165,5 @@ def add_related(word: str, code: str):
                 # add this Word to the appropriate field of word_instance
                 word_attr.add(related_word, through_defaults={'score': score})
 
-            return word_instance, relations
-        else:
-            verbose_code = Word._meta.get_field(code).verbose_name
-            raise ValidationError(f"'{word}' not found by Datamuse, or no related words found for {verbose_code}")
+        # returns an instance for word and the field word_instance.code (which holds the related words)
+        return word_instance, relations

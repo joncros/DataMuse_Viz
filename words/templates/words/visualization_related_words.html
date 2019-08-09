@@ -77,7 +77,11 @@
     <form class="form-inline" action="" method="post">
         <!--Form used to input a single word (optionally adding it to a WordSet) for the DataMuse query-->
         {% csrf_token %}
-        {{ form.non_field_errors }}
+        {% if form.non_field_errors %}
+        <div id="form-errors" class="alert alert-danger">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
 
         <div>
             <div class="col-lg-1 col-sm-1 col-xs-1">

@@ -181,6 +181,10 @@ def visualization_related_words(request):
             results = form.cleaned_data['results']
             logger.debug(f"instance: {instance}, code: {codes}")
 
+            # holds relationship codes for which Datamuse returned no related words.
+            # If any items added to this list, they will be displayed in a message above the form.
+            relations_with_no_results = []
+
             result_dict = {
                 "name": instance.name,
                 "children": [
@@ -205,9 +209,12 @@ def visualization_related_words(request):
                                 ]
                         }
                     )
+                else:
+                    relations_with_no_results.append(verbose_code)
 
             context['root_word'] = instance.name
             context['result_dict'] = result_dict
+            context['relations_with_no_results'] = relations_with_no_results
 
     # if a GET (or any other method) create a blank form
     else:

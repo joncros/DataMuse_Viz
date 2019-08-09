@@ -73,6 +73,13 @@
 {% endblock %}
 
 {% block visualization_form %}
+    {% if relations_with_no_results %}
+    <div id="form-warning" class="alert alert-info">
+        There were no words related to "{{root_word}}" for the relationship type(s):
+        {% for rel in relations_with_no_results %}{% if forloop.first %}{{rel}}{% else %}, {{rel}}{% endif %}{% endfor %}.
+    </div>
+    {% endif %}
+
     <p>Enter word and relations to generate visualization from:</p>
     <form class="form-inline" action="" method="post">
         <!--Form used to input a single word (optionally adding it to a WordSet) for the DataMuse query-->

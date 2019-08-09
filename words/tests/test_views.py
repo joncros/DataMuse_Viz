@@ -251,6 +251,26 @@ class VisualizationRelatedWordsTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['viz_title'], 'Related Words')
 
+    def test_relations_with_no_results_added_to_context_item(self):
+        """Tests that relations for which there were no results are added to context['relations_with_no_results']"""
+        # prepare Word for test
+        word = "test"
+        word_instance = Word.objects.get_or_create(name=word)[0]
+
+        codes = ['jja', 'ant', 'com']
+        jja_verbose = Word._meta.get_field('jja').verbose_name
+        jjb_verbose = Word._meta.get_field('ant').verbose_name
+        syn_verbose = Word._meta.get_field('com').verbose_name
+
+        post_dict = {'word': word, 'relations': codes}
+        response = self.client.post(reverse('viz related words'), post_dict)
+        self.assertEquals(word_instance.ant.count(), 0)
+        self.assertEquals(word_instance.com.count(), 0)
+        self.assertIn('relations_with_no_results', response.context)
+        self.assertNotIn(jja_verbose, response.context['relations_with_no_results'])
+        self.assertIn(jjb_verbose, response.context['relations_with_no_results'])
+        self.assertIn(syn_verbose, response.context['relations_with_no_results'])
+
 
 class VisualizationFrequencyTest(TestCase):
     def test_view_url_exists_at_desired_location(self):

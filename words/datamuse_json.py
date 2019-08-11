@@ -37,6 +37,17 @@ logger = logging.getLogger(__name__)
 api = datamuse.Datamuse()
 
 
+class DatamuseWordNotRecognizedError(Exception):
+    """Exception indicating a Datamuse query failed because the word does not exist in the Datamuse data.
+
+    Should be raised when a query to find an exact word by its spelling (using the Datamuse 'sp' parameter) returns no
+    results, not when a query to find related words fails."""
+
+    def __init__(self, word_string):
+        self.word_string = word_string
+        self.message = f'word "{word_string}" was not recognized by Datamuse'
+
+
 def query_with_retry(retries: int, wait: float, **kwargs):
     """Datamuse query with kwargs, retry a certain number of times (wait a number of seconds in between) on failure."""
     for i in range(0, retries):
@@ -123,7 +134,8 @@ def add_related(word: str, code: str):
     """Query DataMuse for the words related to the Word and add the words to the database.
 
      The relationship type used is determined by the argument code, which should be one of the strings
-     in the list relation_codes. Returns the Word corresponding to word and the QuerySet of related words."""
+     in the list relation_codes. Returns the Word corresponding to word and the QuerySet of related words.
+     Returns None if Datamuse does not recognize 'word'."""
     if code not in relation_codes:
         raise ValueError(f'{code} is not a valid related word code.')
     elif not word or word.isspace():
@@ -135,10 +147,7 @@ def add_related(word: str, code: str):
 
         word_instance = add_or_update_word(word)
         if not word_instance:
-            raise ValidationError(
-                    'word "%(word)s" is not recognized by Datamuse',
-                    params={'word': word},
-                )
+            raise DatamuseWordNotRecognizedError(word)
 
         # the related word field for the word
         word_attr = getattr(word_instance, code)

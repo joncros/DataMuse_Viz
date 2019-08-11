@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile, InMemoryUploadedFile
 from django.test import TestCase
 
+from words.datamuse_json import DatamuseWordNotRecognizedError
 from words.forms import RelatedWordsForm, WordSetCreateForm, WordCharField, WordFileField, WordSetChoice, \
     ScatterplotWordSetChoice
 from words.models import WordSet, Word
@@ -166,6 +167,17 @@ class RelatedWordsFormTest(TestCase):
         form = RelatedWordsForm(post_dict)
         self.assertFalse(form.is_valid())
         self.assertIn("Invalid parameter for Datamuse query: " + message, form.non_field_errors())
+
+    @mock.patch('words.datamuse_json.add_related')
+    def test_datamuse_word_not_recognized(self, add_relatedMock):
+        """Tests that a if a word is submitted that Datamuse will not recognize, a ValidationError is raised."""
+        word = 'ffpq'
+        post_dict = {'word': word, 'relations': ['jja']}
+        add_relatedMock.side_effect = DatamuseWordNotRecognizedError(word)
+        message = f'word "{word}" was not recognized by Datamuse'
+        form = RelatedWordsForm(post_dict)
+        self.assertFalse(form.is_valid())
+        self.assertIn(message, form.non_field_errors())
 
     @mock.patch('words.datamuse_json.add_related')
     def test_datamuse_query_result_none(self, add_relatedMock):

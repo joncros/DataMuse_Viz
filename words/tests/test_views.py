@@ -336,7 +336,7 @@ class VisualizationRelatedWordsTest(TestCase):
         self.assertEqual(response.status_code, 200)
 
         # find which relations were included in result_dict
-        result_dict_children = response.context['result_dict']['children']
+        result_dict_children = response.context['json_object']['children']
         included_relations = []
         for child in result_dict_children:
             included_relations.append(child['name'])

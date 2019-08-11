@@ -1,19 +1,16 @@
-import decimal
 import json
 import logging
+from typing import List
 
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth.mixins import UserPassesTestMixin, AccessMixin
-from django.core.exceptions import ImproperlyConfigured
+from django.contrib.auth.mixins import UserPassesTestMixin
 from django.core.serializers.json import DjangoJSONEncoder
 from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views import generic
-from django.views.generic.base import ContextMixin
-from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.views.generic.edit import CreateView, DeleteView
 
 from words import datamuse_json
+from words.datamuse_json import DatamuseWordNotRecognizedError
 from words.forms import RelatedWordsForm, WordSetCreateForm, WordSetChoice, ScatterplotWordSetChoice
 from words.models import WordSet, Word
 
@@ -163,6 +160,26 @@ def visualization_frequency_scatterplot(request):
     return render(request, 'words/visualization_frequency_scatterplot.html', context)
 
 
+def related_words_query(word: str, relation_codes: List[str]):
+    """Helper for visualization_related_words that performs the needed Datamuse queryies.
+
+    relation_codes is a list of strings corresponding to the desired relation types. Valid strings for this are in
+    datamuse_json.relation_codes.
+
+    Returns a dictionary where each key is the relationship code and the value is the model field holding the words
+    related to the word."""
+    result = {}
+
+    for code in relation_codes:
+        # retrieve the Words related to word for that relationship type
+        query_result = datamuse_json.add_related(word, code)[1]
+        if query_result.count() > 0:
+            # add item to dict with key corresponding to relation
+            result[code] = query_result
+
+    return result
+
+
 def visualization_related_words(request):
     """View for the word relationship visualization"""
 
@@ -176,45 +193,59 @@ def visualization_related_words(request):
         form = RelatedWordsForm(request.POST)
 
         if form.is_valid():
-            instance = form.cleaned_data['word']
-            codes = form.cleaned_data['relations']
-            results = form.cleaned_data['results']
-            logger.debug(f"instance: {instance}, code: {codes}")
+            word = form.cleaned_data['word']
+            relation_codes = form.cleaned_data['relations']
+            logger.debug(f"word: {word}, codes: {relation_codes}")
 
-            # holds relationship codes for which Datamuse returned no related words.
-            # If any items added to this list, they will be displayed in a message above the form.
-            relations_with_no_results = []
+            try:
+                results = related_words_query(word, relation_codes)
 
-            result_dict = {
-                "name": instance.name,
-                "children": [
-                    # list that will hold a dictionary (will be read by js as an object) for each relationship type
-                ]
-            }
+                if results:
+                    # Datamuse returned related words for at least one relation code
 
-            for code in codes:
-                verbose_code = Word._meta.get_field(code).verbose_name
-                if code in results:
-                    result_dict["children"].append(
-                        {
-                            "name":
-                                verbose_code,
-                            "children": [
-                                # list of all the words related by this relationship type and the associated score
+                    # holds relationship codes for which Datamuse returned no related words.
+                    # If any items added to this list, they will be displayed in a message above the form.
+                    relations_with_no_results = []
+
+                    result_dict = {
+                        "name": word,
+                        "children": [
+                            # list that will hold a dictionary (will be read by js as an object) for each relation type
+                        ]
+                    }
+
+                    for code in relation_codes:
+                        verbose_code = Word._meta.get_field(code).verbose_name
+                        if code in results:
+                            result_dict["children"].append(
                                 {
-                                    "name": relation.related_word.name,
-                                    "score": relation.score
+                                    "name":
+                                        verbose_code,
+                                    "children": [
+                                        # list of all the words related by this relation type and the associated score
+                                        {
+                                            "name": relation.related_word.name,
+                                            "score": relation.score
+                                        }
+                                        for relation in results[code].order_by("-score")
+                                        ]
                                 }
-                                for relation in results[code].order_by("-score")
-                                ]
-                        }
-                    )
-                else:
-                    relations_with_no_results.append(verbose_code)
+                            )
+                        else:
+                            relations_with_no_results.append(verbose_code)
 
-            context['root_word'] = instance.name
-            context['result_dict'] = result_dict
-            context['relations_with_no_results'] = relations_with_no_results
+                    context['result_dict'] = result_dict
+                    context['relations_with_no_results'] = relations_with_no_results
+
+                else:
+                    # results is empty (Datamuse did not return related words for any relation code)
+                    context['datamuse_error'] = f'No related words found for word "{word}" for the chosen relations'
+
+            except DatamuseWordNotRecognizedError or ConnectionError or ValueError as e:
+                # no chart to display due to error when querying Datamuse
+                context['datamuse_error'] = e.message
+
+            context['root_word'] = word
 
     # if a GET (or any other method) create a blank form
     else:

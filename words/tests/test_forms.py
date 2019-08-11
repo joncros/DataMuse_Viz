@@ -1,16 +1,13 @@
 import os
 from string import punctuation
-from unittest import mock
 
 from django import forms
-from django.core.exceptions import ValidationError
-from django.core.files.uploadedfile import SimpleUploadedFile, InMemoryUploadedFile
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.test import TestCase
 
-from words.datamuse_json import DatamuseWordNotRecognizedError
 from words.forms import RelatedWordsForm, WordSetCreateForm, WordCharField, WordFileField, WordSetChoice, \
     ScatterplotWordSetChoice
-from words.models import WordSet, Word
+from words.models import WordSet
 
 
 class WordSetCreateFormTest(TestCase):
@@ -134,12 +131,6 @@ class RelatedWordsFormTest(TestCase):
         form = RelatedWordsForm()
         self.assertIn('word', form.fields)
         self.assertIn('relations', form.fields)
-        self.assertIn('results', form.fields)
-
-    def test_results_field_hidden_and_not_required(self):
-        form = RelatedWordsForm()
-        self.assertIsInstance(form.fields['results'].widget, forms.widgets.HiddenInput)
-        self.assertFalse(form.fields['results'].required)
 
     def test_relations_field_nothing_selected(self):
         post_dict = {'word': 'walk'}
@@ -147,74 +138,6 @@ class RelatedWordsFormTest(TestCase):
         form = RelatedWordsForm(post_dict)
         self.assertFalse(form.is_valid())
         self.assertIn(message, form.non_field_errors())
-
-    @mock.patch('words.datamuse_json.query_with_retry')
-    def test_datamuse_connection_error(self, query_with_retryMock):
-        """Tests that a ConnectionError from datamuse_json results in a ValidationError"""
-        post_dict = {'word': 'walk', 'relations': ['jja']}
-        message = 'Datamuse service unavailable'
-        query_with_retryMock.side_effect = ConnectionError(message)
-        form = RelatedWordsForm(post_dict)
-        self.assertFalse(form.is_valid())
-        self.assertIn(message, form.non_field_errors())
-
-    @mock.patch('words.datamuse_json.add_related')
-    def test_datamuse_json_value_error(self, add_relatedMock):
-        """Tests that a ValueError from datamuse_json results in a ValidationError"""
-        post_dict = {'word': 'walk', 'relations': ['jja']}
-        message = 'ValueError message'
-        add_relatedMock.side_effect = ValueError(message)
-        form = RelatedWordsForm(post_dict)
-        self.assertFalse(form.is_valid())
-        self.assertIn("Invalid parameter for Datamuse query: " + message, form.non_field_errors())
-
-    @mock.patch('words.datamuse_json.add_related')
-    def test_datamuse_word_not_recognized(self, add_relatedMock):
-        """Tests that a if a word is submitted that Datamuse will not recognize, a ValidationError is raised."""
-        word = 'ffpq'
-        post_dict = {'word': word, 'relations': ['jja']}
-        add_relatedMock.side_effect = DatamuseWordNotRecognizedError(word)
-        message = f'word "{word}" was not recognized by Datamuse'
-        form = RelatedWordsForm(post_dict)
-        self.assertFalse(form.is_valid())
-        self.assertIn(message, form.non_field_errors())
-
-    @mock.patch('words.datamuse_json.add_related')
-    def test_datamuse_query_result_none(self, add_relatedMock):
-        """Tests there is a non-field error when no related words are returned by Datamuse"""
-        word = 'walk'
-        word_instance = Word.objects.get_or_create(name="walk")[0]
-        post_dict = {'word': word, 'relations': ['jja']}
-        add_relatedMock.return_value = (
-            word_instance,
-            word_instance.jja.none()        # an empty set of words
-        )
-        message = f'No related words found for word "{word}" for the chosen relations'
-        form = RelatedWordsForm(post_dict)
-        self.assertFalse(form.is_valid())
-        self.assertIn(message, form.non_field_errors())
-
-    @mock.patch('words.datamuse_json.add_related')
-    def test_datamuse_some_relations_return_empty_results(self, add_relatedMock):
-        """Tests that a relation code is omitted from the result dict if there are no results for that relation."""
-        word = 'walk'
-        codes = ['jja', 'jjb']
-        word_instance = Word.objects.get_or_create(name=word)[0]
-        jja_word = Word.objects.get_or_create(name="hike")[0]
-        word_instance.jja.add(jja_word)
-        word_instance.save()
-        values = {'jja': (word_instance, word_instance.jja), 'jjb': (word_instance, word_instance.jjb)}
-
-        def side_effect(*args):
-            return values[args[1]]
-
-        add_relatedMock.side_effect = side_effect
-
-        post_dict = {'word': word, 'relations': codes}
-        form = RelatedWordsForm(post_dict)
-        self.assertTrue(form.is_valid())
-        self.assertIn('jja', form.cleaned_data['results'])
-        self.assertNotIn('jjb', form.cleaned_data['results'])
 
 
 class WordSetChoiceTest(TestCase):

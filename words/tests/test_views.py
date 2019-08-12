@@ -1,6 +1,7 @@
 import json
 import logging
 import uuid
+from unittest import mock
 
 from django import http
 from fakeredis import FakeStrictRedis
@@ -12,6 +13,7 @@ from rq.job import Job
 from unittest import mock
 
 from words import views
+from words.datamuse_json import DatamuseWordNotRecognizedError
 from words.models import WordSet, Word
 
 logger = logging.getLogger(__name__)
@@ -341,6 +343,128 @@ class VisualizationRelatedWordsTest(TestCase):
         response = self.client.get(reverse('viz related words'))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['viz_title'], 'Related Words')
+
+    @mock.patch('words.datamuse_json.query_with_retry')
+    def test_datamuse_connection_error(self, query_with_retryMock):
+        """Tests that a message is included in the context if the Datamuse call results in a ConnectionError"""
+        post_dict = {'word': 'walk', 'relations': ['jja']}
+        message = 'Datamuse service unavailable'
+        query_with_retryMock.side_effect = ConnectionError(message)
+        with self.assertRaises(ConnectionError):
+            response = self.client.post(reverse('viz related words'), post_dict)
+            self.assertEqual(response.status_code, 200)
+            self.assertIn('datamuse_error', response.context)
+            self.assertIn(message, response.context['datamuse_error'])
+
+    @mock.patch('words.datamuse_json.add_related')
+    def test_datamuse_json_value_error(self, add_relatedMock):
+        """Tests that a message is included in the context if the Datamuse call results in a ValueError"""
+        post_dict = {'word': 'walk', 'relations': ['jja']}
+        message = 'ValueError message'
+        add_relatedMock.side_effect = ValueError(message)
+        with self.assertRaises(ValueError):
+            response = self.client.post(reverse('viz related words'), post_dict)
+            self.assertEqual(response.status_code, 200)
+            self.assertIn('datamuse_error', response.context)
+            self.assertIn(message, response.context['datamuse_error'])
+
+    @mock.patch('words.datamuse_json.add_related')
+    def test_datamuse_word_not_recognized(self, add_relatedMock):
+        """Tests that a message is included in the context if a word is submitted that Datamuse will not recognize."""
+        word = 'ffpq'
+        post_dict = {'word': word, 'relations': ['jja']}
+        add_relatedMock.side_effect = DatamuseWordNotRecognizedError(word)
+        message = f'word "{word}" was not recognized by Datamuse'
+        # with self.assertRaises(DatamuseWordNotRecognizedError):
+        response = self.client.post(reverse('viz related words'), post_dict)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('datamuse_error', response.context)
+        self.assertIn(message, response.context['datamuse_error'])
+
+    @mock.patch('words.datamuse_json.add_related')
+    def test_datamuse_query_result_none(self, add_relatedMock):
+        """Tests that a message is included in the context when the word is valid, but no related words are returned"""
+        word = 'walk'
+        word_instance = Word.objects.get_or_create(name="walk")[0]
+        post_dict = {'word': word, 'relations': ['jja']}
+        add_relatedMock.return_value = (
+            word_instance,
+            word_instance.jja.none()        # an empty set of words
+        )
+        message = f'No related words found for word "{word}" for the chosen relations'
+        response = self.client.post(reverse('viz related words'), post_dict)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('datamuse_error', response.context)
+        self.assertIn(message, response.context['datamuse_error'])
+
+    @mock.patch('words.datamuse_json.add_related')
+    def test_datamuse_some_relations_return_empty_results(self, add_relatedMock):
+        """Tests that a relation code is omitted from the result dict if there are no results for that relation."""
+        word = 'walk'
+        codes = ['jja', 'jjb']
+        jja_verbose = Word._meta.get_field('jja').verbose_name
+        jjb_verbose = Word._meta.get_field('jjb').verbose_name
+
+        word_instance = Word.objects.get_or_create(name=word)[0]
+        jja_word = Word.objects.get_or_create(name="hike")[0]
+        word_instance.jja.add(jja_word, through_defaults={'score': 100})
+        word_instance.save()
+
+        # verify that for the test database, item count of word_instance.jjb is 0
+        self.assertEqual(word_instance.jjb.count(), 0)
+
+        # return mocked values from add_related
+        values = {'jja': (word_instance, word_instance.jja_relations),
+                  'jjb': (word_instance, word_instance.jjb_relations)}
+
+        def side_effect(*args):
+            return values[args[1]]
+
+        add_relatedMock.side_effect = side_effect
+
+        post_dict = {'word': word, 'relations': codes}
+        response = self.client.post(reverse('viz related words'), post_dict)
+        self.assertEqual(response.status_code, 200)
+
+        # find which relations were included in result_dict
+        result_dict_children = response.context['json_object']['children']
+        included_relations = []
+        for child in result_dict_children:
+            included_relations.append(child['name'])
+
+        self.assertIn(jja_verbose, included_relations)
+        self.assertNotIn(jjb_verbose, included_relations)
+
+    @mock.patch('words.datamuse_json.add_related')
+    def test_relations_with_no_results_added_to_context_item(self, add_relatedMock):
+        """Tests that relations for which there were no results are added to context['relations_with_no_results']"""
+        word = 'walk'
+        codes = ['jja', 'jjb']
+        jja_verbose = Word._meta.get_field('jja').verbose_name
+        jjb_verbose = Word._meta.get_field('jjb').verbose_name
+
+        word_instance = Word.objects.get_or_create(name=word)[0]
+        jja_word = Word.objects.get_or_create(name="hike")[0]
+        word_instance.jja.add(jja_word, through_defaults={'score': 100})
+        word_instance.save()
+
+        # verify that for the test database, item count of word_instance.jjb is 0
+        self.assertEqual(word_instance.jjb.count(), 0)
+
+        # return mocked values from add_related
+        values = {'jja': (word_instance, word_instance.jja_relations), 'jjb': (word_instance, word_instance.jjb_relations)}
+
+        def side_effect(*args):
+            return values[args[1]]
+
+        add_relatedMock.side_effect = side_effect
+
+        post_dict = {'word': word, 'relations': codes}
+        response = self.client.post(reverse('viz related words'), post_dict)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('relations_with_no_results', response.context)
+        self.assertNotIn(jja_verbose, response.context['relations_with_no_results'])
+        self.assertIn(jjb_verbose, response.context['relations_with_no_results'])
 
 
 class VisualizationFrequencyTest(TestCase):

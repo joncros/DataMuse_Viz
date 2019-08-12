@@ -3,7 +3,7 @@ import unittest.mock
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
-from words.datamuse_json import add_or_update_word, add_related, query_with_retry
+from words.datamuse_json import add_or_update_word, add_related, query_with_retry, DatamuseWordNotRecognizedError
 from words.models import Word
 
 
@@ -71,9 +71,11 @@ class AddRelatedTest(TestCase):
         """Tests add_related with a word that will not be found by datamuse"""
         word = "ssdfio"
         code = "jja"
-        regex = f"'{word}' not found by Datamuse, or no related words found for "
-        with self.assertRaisesRegex(ValidationError, regex):
-            result = add_related(word=word, code=code)
+        message = f'word "{word}" was not recognized by Datamuse'
+        with self.assertRaises(DatamuseWordNotRecognizedError) as cm:
+            add_related(word=word, code=code)
+
+        self.assertEquals(message, cm.exception.message)
 
     def test_invalid_code_parameter(self):
         word = "test"

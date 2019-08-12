@@ -3,10 +3,10 @@
 {% block scripts %}<!--Specific script(s) used for word relationships visualization-->{% endblock %}
 
 {% block viz %}
-    {% if result_dict %}
+    {% if json_object %}
         <script type="module">
-            // convert result_dict to format digestible by js
-            var result_dict = {{result_dict|safe }};
+            // convert json_object to format digestible by js
+            var json_object = {{json_object|safe }};
 
             // Load the D3 Observable runtime and inspector.
             import {Runtime, Inspector} from "https://cdn.jsdelivr.net/npm/@observablehq/runtime@4/dist/runtime.js";
@@ -37,7 +37,7 @@
             });
 
             //Reload chart using appropriate data
-            main.redefine("data", result_dict);
+            main.redefine("data", json_object);
 
         </script>
 
@@ -63,7 +63,7 @@
 {% endblock %}
 
 {% block viz-controls %}
-    {% if result_dict %}
+    {% if json_object %}
         <p>
             If you wish to reduce the number of words displayed in the chart, use these controls below.
         </p>
@@ -73,11 +73,29 @@
 {% endblock %}
 
 {% block visualization_form %}
+    {% if relations_with_no_results %}
+    <div id="form-warning" class="alert alert-info">
+        There were no words related to "{{root_word}}" for the relationship type(s):
+        {% for rel in relations_with_no_results %}{% if forloop.first %}{{rel}}{% else %}, {{rel}}{% endif %}{% endfor %}.
+    </div>
+    {% endif %}
+
+    {% if datamuse_error %}
+    <div id="datamuse_error" class="alert alert-danger">
+        <!--Error raised (when querying Datamuse) that prevented the chart from displaying.-->
+        {{ datamuse_error }}
+    </div>
+    {% endif %}
+
     <p>Enter word and relations to generate visualization from:</p>
     <form class="form-inline" action="" method="post">
         <!--Form used to input a single word (optionally adding it to a WordSet) for the DataMuse query-->
         {% csrf_token %}
-        {{ form.non_field_errors }}
+        {% if form.non_field_errors %}
+        <div id="form-errors" class="alert alert-danger">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
 
         <div>
             <div class="col-lg-1 col-sm-1 col-xs-1">

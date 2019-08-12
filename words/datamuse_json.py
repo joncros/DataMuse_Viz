@@ -37,6 +37,17 @@ logger = logging.getLogger(__name__)
 api = datamuse.Datamuse()
 
 
+class DatamuseWordNotRecognizedError(Exception):
+    """Exception indicating a Datamuse query failed because the word does not exist in the Datamuse data.
+
+    Should be raised when a query to find an exact word by its spelling (using the Datamuse 'sp' parameter) returns no
+    results, not when a query to find related words fails."""
+
+    def __init__(self, word_string):
+        self.word_string = word_string
+        self.message = f'word "{word_string}" was not recognized by Datamuse'
+
+
 def query_with_retry(retries: int, wait: float, **kwargs):
     """Datamuse query with kwargs, retry a certain number of times (wait a number of seconds in between) on failure."""
     for i in range(0, retries):
@@ -116,13 +127,15 @@ def add_or_update_word(word: str):
     else:
         logger.info(f'json from Datamuse: {result}')
         logger.info(f'{word} not found by Datamuse')
+        return None
 
 
 def add_related(word: str, code: str):
     """Query DataMuse for the words related to the Word and add the words to the database.
 
      The relationship type used is determined by the argument code, which should be one of the strings
-     in the list relation_codes. Returns the Word corresponding to word and the QuerySet of related words."""
+     in the list relation_codes. Returns the Word corresponding to word and the QuerySet of related words.
+     Returns None if Datamuse does not recognize 'word'."""
     if code not in relation_codes:
         raise ValueError(f'{code} is not a valid related word code.')
     elif not word or word.isspace():
@@ -132,7 +145,9 @@ def add_related(word: str, code: str):
         word = word.lower()
         code_param = "rel_" + code  # parameter used by python-datamuse
 
-        word_instance = Word.objects.get_or_create(name=word)[0]
+        word_instance = add_or_update_word(word)
+        if not word_instance:
+            raise DatamuseWordNotRecognizedError(word)
 
         # the related word field for the word
         word_attr = getattr(word_instance, code)
@@ -153,7 +168,7 @@ def add_related(word: str, code: str):
         if result:
             for item in result:
                 # get the word's score value (it's relevance compared to other words in the query)
-                score = item['score']
+                score = item.get('score', 0)
 
                 # convert item to string that json.loads can read
                 item = json.dumps(item)
@@ -165,7 +180,5 @@ def add_related(word: str, code: str):
                 # add this Word to the appropriate field of word_instance
                 word_attr.add(related_word, through_defaults={'score': score})
 
-            return word_instance, relations
-        else:
-            verbose_code = Word._meta.get_field(code).verbose_name
-            raise ValidationError(f"'{word}' not found by Datamuse, or no related words found for {verbose_code}")
+        # returns an instance for word and the field word_instance.code (which holds the related words)
+        return word_instance, relations

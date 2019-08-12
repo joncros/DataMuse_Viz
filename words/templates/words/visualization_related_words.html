@@ -3,43 +3,92 @@
 {% block scripts %}<!--Specific script(s) used for word relationships visualization-->{% endblock %}
 
 {% block viz %}
-    {% if json_object %}
-        <script type="module">
-            // convert json_object to format digestible by js
-            var json_object = {{json_object|safe }};
+    {% if job_id %}
+    <!--POST request, watch job for Datamuse request and load chart when ready-->
+    <script type="module">
+        // Load the D3 Observable runtime and inspector.
+        import {Runtime, Inspector} from "https://cdn.jsdelivr.net/npm/@observablehq/runtime@4/dist/runtime.js";
 
-            // Load the D3 Observable runtime and inspector.
-            import {Runtime, Inspector} from "https://cdn.jsdelivr.net/npm/@observablehq/runtime@4/dist/runtime.js";
+        // Radial Dendrogram Chart notebook, compiled as an ES module.
+        import notebook from "https://api.observablehq.com/@joncros/radial-dendrogram.js?v=3";
 
-            // Display debug messages in browser console
-            new Runtime().module(notebook, name => {
-              return {
-                pending() { console.log(`${name} is running…`); },
-                fulfilled(value) { console.log(name, value); },
-                rejected(error) { console.error(error); }
-              };
-            });
+        var url = "{% url 'job json' job_id %}";
+        var json_object;
+        var interval = setInterval(function() {
 
-            // Radial Dendrogram Chart notebook, compiled as an ES module.
-            import notebook from "https://api.observablehq.com/@joncros/radial-dendrogram.js?v=3";
+            // retrieve job progress and update page
+            $.getJSON(url, function(data) {
+                if (data.status == "finished") {
+                    // finished, stop checking job progress
+                    clearInterval(interval);
+                    $("#visualization").text("");
 
-            // Load the chart and controls
-            const main = new Runtime().module(notebook, name => {
-              if (name === "chart") {
-                return new Inspector(document.querySelector("#visualization"));
-              }
-              else if (name === "viewof max") {
-                return new Inspector(document.querySelector("#max"));
-              }
-              else if (name === "viewof remove_from_end") {
-                return new Inspector(document.querySelector("#remove_from_end"));
-              }
-            });
+                    // get data to use for chart
+                    json_object = data.result.json_object;
 
-            //Reload chart using appropriate data
-            main.redefine("data", json_object);
+                    // if error occurred with datamuse query, display error
+                    if (data.result.datamuse_error) {
+                        // set text for div with id datamuse_error and show the div
+                        $("#datamuse_error").text(data.result.datamuse_error);
+                        $("#datamuse_error").show();
+                    }
 
-        </script>
+                    // if no result for some relations, display message
+                    else if (data.result.relations_with_no_results) {
+
+                        //format message
+                        var relations_with_no_results = data.result.relations_with_no_results;
+                        var relation_text = relations_with_no_results[0];
+                        if (relations_with_no_results.length > 1) {
+                            for (var i = 1; i < relations_with_no_results.length; i++) {
+                                relation_text += ", " + relations_with_no_results[i];
+                            }
+                        }
+
+                        $("#form-warning").append(relation_text);
+
+                        // show div containing message
+                        $("#form-warning").show();
+                    }
+
+                    if (json_object) {
+                        // Data successfully retrieved from Datamuse, load the chart
+
+                        // Display debug messages in browser console
+                        new Runtime().module(notebook, name => {
+                          return {
+                            pending() { console.log(`${name} is running…`); },
+                            fulfilled(value) { console.log(name, value); },
+                            rejected(error) { console.error(error); }
+                          };
+                        });
+
+                        // Load the chart and controls
+                        const main = new Runtime().module(notebook, name => {
+                          if (name === "chart") {
+                            return new Inspector(document.querySelector("#visualization"));
+                          }
+                          else if (name === "viewof max") {
+                            return new Inspector(document.querySelector("#max"));
+                          }
+                          else if (name === "viewof remove_from_end") {
+                            return new Inspector(document.querySelector("#remove_from_end"));
+                          }
+                        });
+
+                        //Reload chart using appropriate data
+                        main.redefine("data", json_object);
+                    }
+
+                } else if (data.status == "failed") {
+                    $("#visualization").text("Failure retrieving related words, please try again.");
+                } else {
+                    $("#visualization").text("Retrieving related words from Datamuse...");
+                }
+            })
+
+        }, 1000);
+    </script>
 
     {% endif %}
 {% endblock %}
@@ -63,29 +112,23 @@
 {% endblock %}
 
 {% block viz-controls %}
-    {% if json_object %}
         <p>
-            If you wish to reduce the number of words displayed in the chart, use these controls below.
+            After the chart has loaded, there will be controls below here that can be used to reduce the number of
+            words displayed.
         </p>
         <div id="max" class="form-group"></div>
         <div id="remove_from_end" class="form-group"></div>
-    {% endif %}
 {% endblock %}
 
 {% block visualization_form %}
-    {% if relations_with_no_results %}
-    <div id="form-warning" class="alert alert-info">
+    <div id="form-warning" class="alert alert-info" style="display: none;">
+        <!-- Div for warning if some relations have no results. Hidden by default. -->
         There were no words related to "{{root_word}}" for the relationship type(s):
-        {% for rel in relations_with_no_results %}{% if forloop.first %}{{rel}}{% else %}, {{rel}}{% endif %}{% endfor %}.
     </div>
-    {% endif %}
 
-    {% if datamuse_error %}
-    <div id="datamuse_error" class="alert alert-danger">
-        <!--Error raised (when querying Datamuse) that prevented the chart from displaying.-->
-        {{ datamuse_error }}
+    <div id="datamuse_error" class="alert alert-danger" style="display: none;">
+        <!--Error raised (when querying Datamuse) that prevented the chart from displaying. Hidden by default -->
     </div>
-    {% endif %}
 
     <p>Enter word and relations to generate visualization from:</p>
     <form class="form-inline" action="" method="post">

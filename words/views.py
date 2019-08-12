@@ -36,6 +36,19 @@ rq_queue = django_rq.get_queue('default', connection=redis_cursor)
 rq_started_job_registry = StartedJobRegistry(queue=rq_queue)  # connection=redis_cursor) #, queue=rq_queue)
 
 
+def job_json(request, job_id):
+    """Given the job_id for a django-rq job, exposes the job status, meta and result (if any) in json format"""
+    job = Job.fetch(job_id, connection=redis_cursor)
+
+    reply = {
+        'status': job.get_status(),
+        'meta': job.meta,
+        'result': job.result
+    }
+
+    return JsonResponse(reply)
+
+
 def index(request):
     """View function for home tab of site."""
     context = {
@@ -237,7 +250,8 @@ def related_words_process(word: str, relation_codes: List[str]):
                     relations_with_no_results.append(verbose_code)
 
             result['json_object'] = json_object
-            result['relations_with_no_results'] = relations_with_no_results
+            if relations_with_no_results:
+                result['relations_with_no_results'] = relations_with_no_results
 
         else:
             # results is empty (Datamuse did not return related words for any relation code)
@@ -269,10 +283,8 @@ def visualization_related_words(request):
 
             context['root_word'] = word
 
-            results = related_words_process(word, relation_codes)
-
-            # add dictionary items from results to the context
-            context.update(results)
+            job = rq_queue.enqueue(related_words_process, word, relation_codes)
+            context['job_id'] = job.id
 
     # if a GET (or any other method) create a blank form
     else:

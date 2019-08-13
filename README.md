@@ -225,6 +225,11 @@ replacing "password" in the first line with the password you set when installing
 PostgreSQL may be pre-installed on your system without a password, in which case you will need to set the password.)
 <!--todo describe optional line ADDITIONAL_HOST in .env?-->
 
+Then install Redis:
+<pre>
+sudo apt install redis-server
+</pre>
+
 Then install the packages listed in requirements-dev.txt (currently, only fakeredis) that are required to run unit 
 tests.
 

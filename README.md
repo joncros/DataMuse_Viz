@@ -230,8 +230,7 @@ Then install Redis:
 sudo apt install redis-server
 </pre>
 
-Then install the packages listed in requirements-dev.txt (currently, only fakeredis) that are required to run unit 
-tests.
+In order to be able to run unit tests, install the packages listed in requirements-test.txt (currently, only fakeredis).
 
 Then, you need to install <a href="https://devcenter.heroku.com/articles/heroku-cli">Heroku CLI</a>.
 
